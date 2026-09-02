@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 // Helper to get stored auth token
 export const getAuthToken = () => localStorage.getItem('studioplus_token');
@@ -7,7 +7,7 @@ export const getAuthToken = () => localStorage.getItem('studioplus_token');
 async function request(endpoint, options = {}) {
   const token = getAuthToken();
   const isFormData = options.body instanceof FormData;
-  
+
   const headers = {
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...options.headers,
@@ -28,7 +28,7 @@ async function request(endpoint, options = {}) {
         localStorage.removeItem('studioplus_token');
       }
       const errorData = await res.json().catch(() => ({ message: res.statusText }));
-      
+
       let errorMessage = errorData.detail || errorData.message;
       if (!errorMessage && typeof errorData === 'object') {
         const firstValue = Object.values(errorData)[0];
@@ -38,7 +38,7 @@ async function request(endpoint, options = {}) {
           errorMessage = firstValue;
         }
       }
-      
+
       throw new Error(errorMessage || 'API Request failed');
     }
 
