@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    overflow-x: hidden;
+  }
+}
+@layer utilities {
+  .neo-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E5E7;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  }
+
+  .neo-pill-btn {
+    background-color: #111111;
+    color: #FFFFFF;
+    border-radius: 9999px;
+    transition: all 0.2s ease-in-out;
+  }
+  .neo-pill-btn:hover {
+    background-color: #222222;
+    transform: translateY(-1px);
+  }
+
+  .neo-pill-light {
+    background-color: #FFFFFF;
+    color: #111111;
+    border: 1px solid #E5E5E7;
+    border-radius: 9999px;
+    transition: all 0.2s ease-in-out;
+  }
+  .neo-pill-light:hover {
+    background-color: #F8F8FA;
+    border-color: #DCDCDC;
+  }
+
+  .text-gradient-dark {
+    background: linear-gradient(135deg, #111111 0%, #333333 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* Hide scrollbars for clean horizontal category pills */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-only-card, .print-only-card * {
+    visibility: visible;
+  }
+  .print-only-card {
+    position: absolute !important;
+    left: 50% !important;
+    top: 20px !important;
+    transform: translateX(-50%) !important;
+    width: 100% !important;
+    max-width: 500px !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    background: white !important;
+    border: 2px dashed #E5E5E7 !important;
+    border-radius: 20px !important;
+    box-shadow: none !important;
+  }
+  
+  /* Hide the action buttons inside the card during print */
+  .print-hide {
+    display: none !important;
+  }
+}
