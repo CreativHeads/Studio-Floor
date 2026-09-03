@@ -12,7 +12,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-studioplus-super-secr
 
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'studio-floor-backend.onrender.com']
 prod_hosts = os.environ.get('ALLOWED_HOSTS')
 if prod_hosts:
     ALLOWED_HOSTS.extend(prod_hosts.split(','))
@@ -134,6 +134,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
+    "https://studio-floor.vercel.app",
+    "https://studiofloor.in",
+    "https://www.studiofloor.in",
 ]
 prod_cors = os.environ.get('CORS_ALLOWED_ORIGINS')
 if prod_cors:

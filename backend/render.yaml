@@ -23,6 +23,6 @@ services:
       - key: DEBUG
         value: "False"
       - key: CORS_ALLOWED_ORIGINS
-        value: "https://studio-floor.vercel.app,http://localhost:3000" # Update when custom domain is set
+        value: "https://studio-floor.vercel.app,http://localhost:3000,https://studiofloor.in,https://www.studiofloor.in"
       - key: ALLOWED_HOSTS
         value: ".onrender.com"
