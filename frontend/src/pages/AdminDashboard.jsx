@@ -435,44 +435,56 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredBookings.map(b => (
-                    <tr key={b.id || b.booking_reference} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-bold text-emerald-700 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>{b.booking_reference}</td>
-                      <td className="py-3.5 px-4 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>
-                        <div className="font-bold text-slate-900">{b.customer_name}</div>
-                        <div className="text-[10px] text-slate-500">{b.customer_email}</div>
-                      </td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-700 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>{b.studio_details?.name || 'Studio Room'}</td>
-                      <td className="py-3.5 px-4 text-slate-700 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>
-                        <div>{b.booking_date}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">{b.start_time} - {b.end_time}</div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${b.status === 'CONFIRMED'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                          : b.status === 'COMPLETED'
-                            ? 'bg-sky-50 text-sky-700 border-sky-300'
-                            : b.status === 'HOLD'
-                              ? 'bg-amber-50 text-amber-700 border-amber-300'
-                              : 'bg-red-50 text-red-700 border-red-300'
-                          }`}>
-                          {b.status}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <select
-                          value={b.status}
-                          onChange={(e) => handleUpdateStatus(b.id, e.target.value)}
-                          className="bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700 px-2 py-1 focus:outline-none"
-                        >
-                          <option value="CONFIRMED">CONFIRMED</option>
-                          <option value="HOLD">HOLD</option>
-                          <option value="COMPLETED">COMPLETED</option>
-                          <option value="CANCELLED">CANCELLED</option>
-                        </select>
+                  {filteredBookings.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="py-12 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-3 text-slate-400">
+                          <Calendar className="w-10 h-10 animate-bounce text-slate-300" />
+                          <div className="text-sm font-bold text-slate-500">No items</div>
+                          <p className="text-xs">There are no reservation records to display.</p>
+                        </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredBookings.map(b => (
+                      <tr key={b.id || b.booking_reference} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3.5 px-4 font-mono font-bold text-emerald-700 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>{b.booking_reference}</td>
+                        <td className="py-3.5 px-4 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>
+                          <div className="font-bold text-slate-900">{b.customer_name}</div>
+                          <div className="text-[10px] text-slate-500">{b.customer_email}</div>
+                        </td>
+                        <td className="py-3.5 px-4 font-semibold text-slate-700 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>{b.studio_details?.name || 'Studio Room'}</td>
+                        <td className="py-3.5 px-4 text-slate-700 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>
+                          <div>{b.booking_date}</div>
+                          <div className="text-[10px] text-slate-500 font-mono">{b.start_time} - {b.end_time}</div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${b.status === 'CONFIRMED'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                            : b.status === 'COMPLETED'
+                              ? 'bg-sky-50 text-sky-700 border-sky-300'
+                              : b.status === 'HOLD'
+                                ? 'bg-amber-50 text-amber-700 border-amber-300'
+                                : 'bg-red-50 text-red-700 border-red-300'
+                            }`}>
+                            {b.status}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <select
+                            value={b.status}
+                            onChange={(e) => handleUpdateStatus(b.id, e.target.value)}
+                            className="bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700 px-2 py-1 focus:outline-none"
+                          >
+                            <option value="CONFIRMED">CONFIRMED</option>
+                            <option value="HOLD">HOLD</option>
+                            <option value="COMPLETED">COMPLETED</option>
+                            <option value="CANCELLED">CANCELLED</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
