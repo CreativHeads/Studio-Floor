@@ -11,7 +11,7 @@ class StudioRoom(models.Model):
     slug = models.SlugField(unique=True)
     room_type = models.CharField(max_length=50, choices=RoomType.choices, default=RoomType.PODCAST)
     tagline = models.CharField(max_length=255, blank=True)
-    description = models.TextField()
+    description = models.TextField(blank=True)
     hourly_rate = models.DecimalField(max_digits=8, decimal_places=2)
     half_day_rate = models.DecimalField(max_digits=8, decimal_places=2)
     full_day_rate = models.DecimalField(max_digits=8, decimal_places=2)
