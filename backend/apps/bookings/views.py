@@ -61,15 +61,19 @@ class BookingViewSet(viewsets.ModelViewSet):
             Q(status='HOLD') & Q(expires_at__lt=now)
         )
         
-        blocked_hours = set()
+        blocked_hours_dict = {}
         for b in bookings:
             start_hour = b.start_time.hour
             end_hour = b.end_time.hour
             # Block the actual hours + 1 hour cleaning buffer
             for h in range(start_hour, end_hour + 1): 
-                blocked_hours.add(h)
+                current_status = blocked_hours_dict.get(h)
+                # Prioritize CONFIRMED/COMPLETED over HOLD if there's overlap in cleaning buffers
+                if current_status not in ['CONFIRMED', 'COMPLETED']:
+                    blocked_hours_dict[h] = b.status
                 
-        return Response(list(blocked_hours))
+        blocked_list = [{"hour": k, "status": v} for k, v in blocked_hours_dict.items()]
+        return Response(blocked_list)
 
     @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
     def update_status(self, request, pk=None):

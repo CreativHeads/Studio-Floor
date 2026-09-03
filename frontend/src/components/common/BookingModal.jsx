@@ -488,7 +488,9 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
               </div>
               <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar pb-2">
                 {Array.from({ length: 14 }, (_, i) => i + 8).map((hour) => {
-                  const isBooked = bookedSlots.includes(hour);
+                  const slotInfo = bookedSlots.find(b => b.hour === hour);
+                  const isBooked = !!slotInfo;
+                  const isHold = slotInfo?.status === 'HOLD';
                   const isStart = selectionStartBlock === hour;
                   const isEnd = selectionEndBlock === hour;
                   const isInRange = selectionStartBlock !== null && selectionEndBlock !== null && hour >= selectionStartBlock && hour <= selectionEndBlock;
@@ -506,7 +508,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                         } else {
                           // Check if any blocked hour is in between
                           for (let h = selectionStartBlock; h <= hour; h++) {
-                            if (bookedSlots.includes(h)) {
+                            if (bookedSlots.some(b => b.hour === h)) {
                               toast.error("Cannot select across a booked time slot.");
                               setSelectionStartBlock(hour);
                               setSelectionEndBlock(null);
@@ -518,7 +520,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                       }}
                       className={`py-2 px-1 rounded-xl text-center transition-all flex flex-col items-center justify-center border-2 ${
                         isBooked
-                          ? 'bg-slate-100 border-slate-200 opacity-40 cursor-not-allowed'
+                          ? isHold ? 'bg-amber-50 border-amber-200 opacity-60 cursor-not-allowed' : 'bg-slate-100 border-slate-200 opacity-40 cursor-not-allowed'
                           : (isStart || isEnd)
                             ? 'bg-[#111111] border-[#111111] text-white shadow-md transform scale-105 z-10'
                             : isInRange
@@ -526,9 +528,10 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                               : 'bg-white border-[#E5E5E7] text-slate-700 hover:border-slate-300'
                       }`}
                     >
-                      <span className={`text-[10px] sm:text-xs font-extrabold ${isBooked ? 'text-slate-400' : (isInRange || isStart || isEnd) ? 'text-white' : 'text-[#111111]'}`}>
+                      <span className={`text-[10px] sm:text-xs font-extrabold ${isBooked ? (isHold ? 'text-amber-500' : 'text-slate-400') : (isInRange || isStart || isEnd) ? 'text-white' : 'text-[#111111]'}`}>
                         {formatAMPM(hour).replace(':00', '')}
                       </span>
+                      {isHold && <span className="text-[7px] font-black text-amber-500 uppercase tracking-widest mt-0.5">Held</span>}
                     </button>
                   );
                 })}
