@@ -64,14 +64,22 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   }, [isOpen, initialStudio]);
 
   useEffect(() => {
-    if (selectedStudio && bookingDate) {
-      api.getBookedSlots(selectedStudio.id, bookingDate)
-        .then(data => setBookedSlots(data))
-        .catch(console.error);
-    } else {
-      setBookedSlots([]);
+    if (selectedStudio && bookingDate && step === 2) {
+      // Show loading initially or just fetch
+      if (bookedSlots.length === 0) setBookedSlots([]);
+      
+      const fetchSlots = () => {
+        api.getBookedSlots(selectedStudio.id, bookingDate)
+          .then(data => setBookedSlots(data))
+          .catch(console.error);
+      };
+
+      fetchSlots(); // Fetch immediately
+      const intervalId = setInterval(fetchSlots, 3000); // Poll every 3 seconds
+
+      return () => clearInterval(intervalId);
     }
-  }, [selectedStudio, bookingDate]);
+  }, [selectedStudio, bookingDate, step]);
 
   useEffect(() => {
     if (!isOpen) {
