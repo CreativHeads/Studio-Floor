@@ -13,7 +13,8 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   const [selectedStudio, setSelectedStudio] = useState(initialStudio || null);
   const [guestCapacity, setGuestCapacity] = useState('1 Creator');
   const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedSlot, setSelectedSlot] = useState({ start: '11:00', end: '13:00', hours: 2, label: '11:00 AM - 01:00 PM', category: 'MORNING' });
+  const [selectionStartBlock, setSelectionStartBlock] = useState(null);
+  const [selectionEndBlock, setSelectionEndBlock] = useState(null);
   const [bookedSlots, setBookedSlots] = useState([]);
   const [name, setName] = useState(user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username : '');
   const [email, setEmail] = useState(user ? user.email : '');
@@ -117,34 +118,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
   const next7Days = getNext7Days();
 
-  const categorizedSlots = [
-    {
-      category: 'MORNING SESSIONS',
-      icon: Sun,
-      color: 'text-amber-500',
-      slots: [
-        { start: '09:00', end: '11:00', hours: 2, label: '09:00 AM - 11:00 AM', detail: '2 Hours Morning Block' },
-        { start: '11:00', end: '13:00', hours: 2, label: '11:00 AM - 01:00 PM', detail: '2 Hours Peak Morning' }
-      ]
-    },
-    {
-      category: 'AFTERNOON SESSIONS',
-      icon: Sunset,
-      color: 'text-orange-500',
-      slots: [
-        { start: '14:00', end: '16:00', hours: 2, label: '02:00 PM - 04:00 PM', detail: '2 Hours Midday Block' },
-        { start: '16:00', end: '18:00', hours: 2, label: '04:00 PM - 06:00 PM', detail: '2 Hours Sunset Session' }
-      ]
-    },
-    {
-      category: 'EVENING PRIME BLOCK',
-      icon: Moon,
-      color: 'text-indigo-400',
-      slots: [
-        { start: '18:00', end: '22:00', hours: 4, label: '06:00 PM - 10:00 PM', detail: '4 Hours Evening Special' }
-      ]
-    }
-  ];
+
 
   let requiredCapacity = 1;
   if (guestCapacity.includes('2 People')) requiredCapacity = 2;
@@ -154,7 +128,24 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   const filteredRooms = rooms.filter(room => room.max_capacity === requiredCapacity);
   const isSelectedStudioValid = selectedStudio && filteredRooms.some(r => r.id === selectedStudio.id);
 
-  const roomPrice = parseFloat(selectedStudio?.hourly_rate || 100) * selectedSlot.hours;
+  const formatAMPM = (h) => {
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const hr12 = h % 12 || 12;
+      return `${hr12.toString().padStart(2, '0')}:00 ${ampm}`;
+  };
+
+  let selectedSlot = null;
+  if (selectionStartBlock !== null && selectionEndBlock !== null) {
+    const endBlockPlusOne = selectionEndBlock + 1;
+    selectedSlot = {
+      start: `${selectionStartBlock.toString().padStart(2, '0')}:00`,
+      end: `${endBlockPlusOne.toString().padStart(2, '0')}:00`,
+      hours: endBlockPlusOne - selectionStartBlock,
+      label: `${formatAMPM(selectionStartBlock)} - ${formatAMPM(endBlockPlusOne)}`
+    };
+  }
+
+  const roomPrice = parseFloat(selectedStudio?.hourly_rate || 100) * (selectedSlot ? selectedSlot.hours : 0);
   const totalAmount = roomPrice;
 
   const handleHoldSlot = async () => {
@@ -477,53 +468,64 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
               </div>
             </div>
 
-            {/* 2. CATEGORIZED TIME SLOTS */}
-            <div className="space-y-3 mb-6 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
-              {categorizedSlots.map((group, idx) => {
-                const IconComp = group.icon;
-                return (
-                  <div key={idx}>
-                    <div className="flex items-center gap-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5">
-                      <IconComp className={`w-3 h-3 ${group.color}`} />
-                      <span>{group.category}</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      {group.slots.map((slot) => {
-                        const isSelected = selectedSlot.start === slot.start;
-                        const isBooked = bookedSlots.some(b => b.start === slot.start);
-                        return (
-                          <button
-                            key={slot.start}
-                            type="button"
-                            disabled={isBooked}
-                            onClick={() => setSelectedSlot(slot)}
-                            className={`p-2 sm:p-2.5 rounded-xl border text-left transition-all flex flex-col justify-center relative group overflow-hidden ${isBooked
-                              ? 'bg-slate-100 border-slate-200 opacity-50 cursor-not-allowed'
-                              : isSelected
-                                ? 'bg-[#111111] border-[#111111] text-white shadow-md'
-                                : 'bg-slate-50 border-[#E5E5E7] text-slate-800 hover:border-slate-300 hover:bg-white'
-                              }`}
-                          >
-                            <div className="flex items-center justify-between w-full">
-                              <div className="text-[10px] sm:text-[11px] font-extrabold flex items-center gap-1 truncate pr-1">
-                                <Clock className={`w-3 h-3 shrink-0 ${isBooked ? 'text-slate-400' : isSelected ? 'text-amber-400' : 'text-slate-500'}`} />
-                                <span className="truncate">{slot.label}</span>
-                              </div>
-                              {isSelected && (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 absolute top-2 right-2 sm:static sm:top-auto sm:right-auto" />
-                              )}
-                            </div>
-                            <div className={`text-[8.5px] sm:text-[9px] mt-1 line-clamp-1 ${isBooked ? 'text-slate-400' : isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
-                              {isBooked ? 'Already Booked' : slot.detail}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
+            {/* 2. DYNAMIC HOUR GRID SELECTION */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[11px] font-extrabold text-[#111111] uppercase tracking-wider flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                  Select Time Range
+                </label>
+                <span className="text-[9px] text-slate-500 font-bold">
+                  {selectionStartBlock !== null && selectionEndBlock === null ? "Select end time..." : "Click start, then end time"}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar pb-2">
+                {Array.from({ length: 14 }, (_, i) => i + 8).map((hour) => {
+                  const isBooked = bookedSlots.includes(hour);
+                  const isStart = selectionStartBlock === hour;
+                  const isEnd = selectionEndBlock === hour;
+                  const isInRange = selectionStartBlock !== null && selectionEndBlock !== null && hour >= selectionStartBlock && hour <= selectionEndBlock;
+                  
+                  return (
+                    <button
+                      key={hour}
+                      type="button"
+                      disabled={isBooked}
+                      onClick={() => {
+                        if (isBooked) return;
+                        if (selectionStartBlock === null || (selectionStartBlock !== null && selectionEndBlock !== null) || hour < selectionStartBlock) {
+                          setSelectionStartBlock(hour);
+                          setSelectionEndBlock(null);
+                        } else {
+                          // Check if any blocked hour is in between
+                          for (let h = selectionStartBlock; h <= hour; h++) {
+                            if (bookedSlots.includes(h)) {
+                              toast.error("Cannot select across a booked time slot.");
+                              setSelectionStartBlock(hour);
+                              setSelectionEndBlock(null);
+                              return;
+                            }
+                          }
+                          setSelectionEndBlock(hour);
+                        }
+                      }}
+                      className={`py-2 px-1 rounded-xl text-center transition-all flex flex-col items-center justify-center border-2 ${
+                        isBooked
+                          ? 'bg-slate-100 border-slate-200 opacity-40 cursor-not-allowed'
+                          : (isStart || isEnd)
+                            ? 'bg-[#111111] border-[#111111] text-white shadow-md transform scale-105 z-10'
+                            : isInRange
+                              ? 'bg-slate-800 border-slate-800 text-white'
+                              : 'bg-white border-[#E5E5E7] text-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      <span className={`text-[10px] sm:text-xs font-extrabold ${isBooked ? 'text-slate-400' : (isInRange || isStart || isEnd) ? 'text-white' : 'text-[#111111]'}`}>
+                        {formatAMPM(hour).replace(':00', '')}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* LIVE SELECTION RIBBON */}
@@ -531,7 +533,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
               <span className="flex items-center gap-1.5 truncate">
                 <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 <span className="truncate">
-                  {bookingDate} &bull; {selectedSlot.label} ({selectedSlot.hours} hrs)
+                  {selectedSlot ? `${bookingDate} \u2022 ${selectedSlot.label} (${selectedSlot.hours} hrs)` : "No time selected"}
                 </span>
               </span>
               <span className="text-emerald-600 text-[9px] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0 font-extrabold">
@@ -627,11 +629,11 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
             <div className="p-3.5 bg-slate-50 border border-[#E5E5E7] rounded-xl space-y-1.5 text-xs">
               <div className="flex justify-between items-center text-[#111111] font-bold">
                 <span className="text-slate-500 font-medium">Studio Suite</span>
-                <span className="font-extrabold text-[#111111]">{selectedStudio?.name} ({selectedSlot.hours} hrs)</span>
+                <span className="font-extrabold text-[#111111]">{selectedStudio?.name} ({selectedSlot ? selectedSlot.hours : 0} hrs)</span>
               </div>
               <div className="text-[11px] text-slate-500 flex justify-between">
                 <span>Reservation Date</span>
-                <span className="font-bold text-[#111111]">{bookingDate} [{selectedSlot.label}]</span>
+                <span className="font-bold text-[#111111]">{bookingDate} [{selectedSlot ? selectedSlot.label : ''}]</span>
               </div>
               <div className="text-[11px] text-slate-500 flex justify-between">
                 <span>Session Capacity</span>
@@ -700,7 +702,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                 </div>
                 <div>
                   <span className="text-slate-400 text-[9px]">DATE & TIME</span>
-                  <p className="font-semibold text-amber-300 text-[11px]">{confirmedBooking.booking_date} [{selectedSlot.start} - {selectedSlot.end}]</p>
+                  <p className="font-semibold text-amber-300 text-[11px]">{confirmedBooking.booking_date} [{selectedSlot ? selectedSlot.start : ''} - {selectedSlot ? selectedSlot.end : ''}]</p>
                 </div>
                 <div>
                   <span className="text-slate-400 text-[9px]">SESSION CAPACITY</span>

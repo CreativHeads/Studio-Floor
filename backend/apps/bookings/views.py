@@ -55,13 +55,21 @@ class BookingViewSet(viewsets.ModelViewSet):
         
         # A slot is booked if it's NOT cancelled AND (it's NOT a hold OR it's an unexpired hold)
         bookings = Booking.objects.filter(
+            studio_id=studio_id,
             booking_date=date
         ).exclude(status='CANCELLED').exclude(
             Q(status='HOLD') & Q(expires_at__lt=now)
         )
         
-        slots = [{"start": b.start_time.strftime('%H:%M'), "end": b.end_time.strftime('%H:%M')} for b in bookings]
-        return Response(slots)
+        blocked_hours = set()
+        for b in bookings:
+            start_hour = b.start_time.hour
+            end_hour = b.end_time.hour
+            # Block the actual hours + 1 hour cleaning buffer
+            for h in range(start_hour, end_hour + 1): 
+                blocked_hours.add(h)
+                
+        return Response(list(blocked_hours))
 
     @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
     def update_status(self, request, pk=None):
@@ -88,15 +96,23 @@ class BookingViewSet(viewsets.ModelViewSet):
         from django.db.models import Q
         
         # Check if already booked or actively held
-        existing = Booking.objects.filter(
-            booking_date=booking_date,
-            start_time=start_time
+        bookings = Booking.objects.filter(
+            studio_id=studio_id,
+            booking_date=booking_date
         ).exclude(status='CANCELLED').exclude(
             Q(status='HOLD') & Q(expires_at__lt=now)
-        ).first()
+        )
         
-        if existing:
-            return Response({'error': 'Slot is no longer available'}, status=status.HTTP_409_CONFLICT)
+        from datetime import datetime
+        req_start_hour = datetime.strptime(start_time[:5], '%H:%M').time().hour
+        req_end_hour = datetime.strptime(end_time[:5], '%H:%M').time().hour
+        
+        for b in bookings:
+            b_start_hour = b.start_time.hour
+            b_end_hour = b.end_time.hour
+            # Existing booking occupies from b_start_hour to (b_end_hour + 1) to account for cleaning buffer
+            if req_start_hour < (b_end_hour + 1) and req_end_hour > b_start_hour:
+                return Response({'error': 'Selected time overlaps with an existing booking or its cleaning buffer.'}, status=status.HTTP_409_CONFLICT)
             
         # Create a HOLD booking
         hold = Booking.objects.create(
