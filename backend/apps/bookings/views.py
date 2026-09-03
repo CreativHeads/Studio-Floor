@@ -127,8 +127,9 @@ class BookingViewSet(viewsets.ModelViewSet):
             duration_hours=duration_hours,
             status='HOLD',
             total_amount=0,
-            customer_name='Guest (Hold)',
-            customer_email='hold@pending.com',
+            customer_name=request.user.username if request.user.is_authenticated else 'Guest (Hold)',
+            customer_email=request.user.email if request.user.is_authenticated else 'hold@pending.com',
+            user=request.user if request.user.is_authenticated else None,
             expires_at=now + timedelta(minutes=10)
         )
         
