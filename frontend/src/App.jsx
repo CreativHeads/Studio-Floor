@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import AuthModal from './components/common/AuthModal';
 import BookingModal from './components/common/BookingModal';
 import MobileBottomBar from './components/common/MobileBottomBar';
-import PublicWebsite from './pages/PublicWebsite';
-import AdminDashboard from './pages/AdminDashboard';
-import MyPassesPage from './pages/MyPassesPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
+
+const PublicWebsite = lazy(() => import('./pages/PublicWebsite'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const MyPassesPage = lazy(() => import('./pages/MyPassesPage'));
 
 function MainApp() {
   const { user, isAdmin } = useAuth();
@@ -63,13 +64,19 @@ function MainApp() {
       />
 
       {/* Main View Router */}
-      {currentView === 'public' ? (
-        <PublicWebsite onOpenBooking={handleOpenBooking} />
-      ) : currentView === 'admin' ? (
-        <AdminDashboard adminTab={adminTab} setAdminTab={setAdminTab} />
-      ) : currentView === 'my-passes' ? (
-        <MyPassesPage />
-      ) : null}
+      <Suspense fallback={
+        <div className="flex h-[60vh] w-full items-center justify-center">
+          <div className="w-8 h-8 border-4 border-[#111111] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      }>
+        {currentView === 'public' ? (
+          <PublicWebsite onOpenBooking={handleOpenBooking} />
+        ) : currentView === 'admin' ? (
+          <AdminDashboard adminTab={adminTab} setAdminTab={setAdminTab} />
+        ) : currentView === 'my-passes' ? (
+          <MyPassesPage />
+        ) : null}
+      </Suspense>
 
       {/* Footer */}
       <Footer currentView={currentView} />
