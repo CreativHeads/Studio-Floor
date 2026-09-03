@@ -608,8 +608,8 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                   <option value="ALL">All Capacities</option>
                   <option value="1">1 Guest</option>
                   <option value="2">2 Guests</option>
+                  <option value="3">3 Guests</option>
                   <option value="4">4 Guests</option>
-                  <option value="8">8 Guests</option>
                 </select>
 
                 <button
@@ -665,8 +665,8 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                       <select required value={newRoom.max_capacity} onChange={e => setNewRoom({ ...newRoom, max_capacity: parseInt(e.target.value) })} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#111111] focus:bg-white focus:border-[#111111] focus:ring-1 focus:ring-[#111111] focus:outline-none transition-all cursor-pointer">
                         <option value={1}>1 Creator (Solo)</option>
                         <option value={2}>2 People (Host + Guest)</option>
+                        <option value={3}>3 People (Small Group)</option>
                         <option value={4}>4 People (Panel Session)</option>
-                        <option value={8}>8 Max (Full Production Team)</option>
                       </select>
                     </div>
 

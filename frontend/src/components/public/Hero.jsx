@@ -18,8 +18,8 @@ export default function Hero({ onOpenBooking }) {
   const capacities = [
     { value: '1 Creator', label: '1 Creator', detail: 'Solo Recording' },
     { value: '2 People (Host + Guest)', label: '2 People', detail: 'Host + Guest' },
-    { value: '4 People (Panel Session)', label: '4 People', detail: 'Panel Session' },
-    { value: 'Full Production Team (8 Max)', label: '8 Max', detail: 'Full Team' }
+    { value: '3 People (Small Group)', label: '3 People', detail: 'Small Group' },
+    { value: '4 People (Panel Session)', label: '4 People', detail: 'Panel Session' }
   ];
 
   const handleHeroSubmit = (e) => {

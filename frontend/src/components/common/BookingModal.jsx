@@ -148,8 +148,8 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
   let requiredCapacity = 1;
   if (guestCapacity.includes('2 People')) requiredCapacity = 2;
+  if (guestCapacity.includes('3 People')) requiredCapacity = 3;
   if (guestCapacity.includes('4 People')) requiredCapacity = 4;
-  if (guestCapacity.includes('8 Max') || guestCapacity.includes('8 People')) requiredCapacity = 8;
 
   const filteredRooms = rooms.filter(room => room.max_capacity === requiredCapacity);
   const isSelectedStudioValid = selectedStudio && filteredRooms.some(r => r.id === selectedStudio.id);
@@ -302,8 +302,8 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
               {[
                 { value: '1 Creator', label: '1 Creator', detail: 'Solo Recording' },
                 { value: '2 People (Host + Guest)', label: '2 People', detail: 'Host & Guest' },
-                { value: '4 People (Panel Session)', label: '4 People', detail: 'Panel Session' },
-                { value: 'Full Production Team (8 Max)', label: '8 Max', detail: 'Full Team' }
+                { value: '3 People (Small Group)', label: '3 People', detail: 'Small Group' },
+                { value: '4 People (Panel Session)', label: '4 People', detail: 'Panel Session' }
               ].map((cap, i) => (
                 <button
                   key={i}
