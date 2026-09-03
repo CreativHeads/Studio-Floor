@@ -65,11 +65,7 @@ function MainApp() {
       />
 
       {/* Main View Router */}
-      <Suspense fallback={
-        <div className="flex h-[60vh] w-full items-center justify-center">
-          <div className="w-8 h-8 border-4 border-[#111111] border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      }>
+      <Suspense fallback={null}>
         {currentView === 'public' ? (
           <PublicWebsite onOpenBooking={handleOpenBooking} />
         ) : currentView === 'admin' ? (

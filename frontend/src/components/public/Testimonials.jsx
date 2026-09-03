@@ -133,7 +133,7 @@ export default function Testimonials() {
               </div>
 
               <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
-                <img src={r.avatar} alt={r.name} className="w-10 h-10 rounded-full object-cover border-2 border-emerald-50" />
+                <img src={r.avatar} alt={r.name} loading="lazy" className="w-10 h-10 rounded-full object-cover border-2 border-emerald-50" />
                 <div>
                   <div className="text-sm font-extrabold text-slate-900 leading-none mb-1">{r.name}</div>
                   <div className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">{r.role}</div>

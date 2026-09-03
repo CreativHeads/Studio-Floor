@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Phone, Calendar, User, Shield, Plus, LogIn, LogOut, CalendarPlus, Activity, Users, Layers } from 'lucide-react';
+import { Home, Phone, Calendar, User, Shield, Plus, LogIn, LogOut, CalendarPlus, Activity, Users, Layers, FileText } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -67,15 +67,23 @@ export default function MobileBottomBar({ currentView, setCurrentView, onOpenBoo
           </button>
 
           <button 
-            onClick={() => setAdminTab('users')}
+            onClick={() => setAdminTab('security')}
             className={`flex flex-col items-center gap-0.5 p-2 rounded-full transition-all ${
-              adminTab === 'users' ? 'text-amber-300 font-bold' : 'text-slate-400 hover:text-white'
+              adminTab === 'security' ? 'text-amber-300 font-bold' : 'text-slate-400 hover:text-white'
             }`}
           >
             <Users className="w-5 h-5" />
             <span className="text-[9px]">Users</span>
           </button>
-
+          <button 
+            onClick={() => setAdminTab('blogs')}
+            className={`flex flex-col items-center gap-0.5 p-2 rounded-full transition-all ${
+              adminTab === 'blogs' ? 'text-amber-300 font-bold' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <FileText className="w-5 h-5" />
+            <span className="text-[9px]">Blogs</span>
+          </button>
 
 
         </div>

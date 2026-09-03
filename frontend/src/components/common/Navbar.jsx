@@ -97,10 +97,10 @@ export default function Navbar({ onOpenBooking, onOpenAuth, onOpenMyBookings, cu
               </div>
             ) : (
               <>
-                <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('public'); }} className="hover:text-[#111111] transition-colors">Equipment</a>
-                <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('public'); }} className="hover:text-[#111111] transition-colors">Reviews</a>
-                <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('public'); }} className="hover:text-[#111111] transition-colors">FAQ</a>
-                <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('public'); }} className="hover:text-[#111111] transition-colors">Contact</a>
+                <a href="#equipment" onClick={() => setCurrentView('public')} className="hover:text-[#111111] transition-colors">Equipment</a>
+                <a href="#testimonials" onClick={() => setCurrentView('public')} className="hover:text-[#111111] transition-colors">Reviews</a>
+                <a href="#faq" onClick={() => setCurrentView('public')} className="hover:text-[#111111] transition-colors">FAQ</a>
+                <a href="#contact" onClick={() => setCurrentView('public')} className="hover:text-[#111111] transition-colors">Contact</a>
               </>
             )}
           </nav>

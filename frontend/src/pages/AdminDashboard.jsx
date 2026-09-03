@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api, MOCK_ROOMS } from '../services/api';
+import FadeIn from '../components/common/FadeIn';
+import Pagination from '../components/common/Pagination';
 
 export default function AdminDashboard({ adminTab, setAdminTab }) {
   const [analytics, setAnalytics] = useState(null);
@@ -37,6 +39,14 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
     image: null, image_preview: '',
     acoustics_rating: 'STC-60 Sound Isolation'
   });
+
+  // Pagination State
+  const [bookingsPage, setBookingsPage] = useState(1);
+  const [studiosPage, setStudiosPage] = useState(1);
+  const [usersPage, setUsersPage] = useState(1);
+  const [blogsPage, setBlogsPage] = useState(1);
+  const tableItemsPerPage = 10;
+  const gridItemsPerPage = 8;
 
   const loadAdminData = () => {
     setLoading(true);
@@ -266,6 +276,16 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
     b.customer_email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Pagination Derivations
+  const paginatedBookings = filteredBookings.slice((bookingsPage - 1) * tableItemsPerPage, bookingsPage * tableItemsPerPage);
+  
+  const filteredRooms = rooms.filter(room => capacityFilter === 'ALL' || room.max_capacity === parseInt(capacityFilter));
+  const paginatedRooms = filteredRooms.slice((studiosPage - 1) * gridItemsPerPage, studiosPage * gridItemsPerPage);
+
+  const paginatedUsers = usersList.slice((usersPage - 1) * tableItemsPerPage, usersPage * tableItemsPerPage);
+  
+  const paginatedBlogs = blogs.slice((blogsPage - 1) * tableItemsPerPage, blogsPage * tableItemsPerPage);
+
   return (
     <div className="min-h-screen bg-[#F3F3F5] text-slate-900 p-4 sm:p-6 lg:p-8 pb-24 sm:pb-28 lg:pb-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -299,7 +319,6 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-bold text-slate-500">Hours Booked</span>
-                    <Clock className="w-4 h-4 text-emerald-600" />
                   </div>
                   <div className="text-2xl font-black text-slate-900 mb-1">
                     {bookings.reduce((total, b) => {
@@ -321,7 +340,6 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-bold text-slate-500">Total Reservations</span>
-                    <Calendar className="w-4 h-4 text-amber-600" />
                   </div>
                   <div className="text-2xl font-black text-slate-900 mb-1">{bookings.length}</div>
                   <div className="text-[10px] font-bold text-amber-600">Confirmed sessions</div>
@@ -336,7 +354,6 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-bold text-slate-500">Active Studios</span>
-                    <Radio className="w-4 h-4 text-amber-600" />
                   </div>
                   <div className="text-2xl font-black text-slate-900 mb-1">{rooms.length} Suites</div>
                   <div className="text-[10px] font-bold text-amber-600">Total registered in database</div>
@@ -346,36 +363,39 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
             
             {/* Studio Utilization Statistics */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-              {/* Top Performing Suites */}
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <Activity className="w-5 h-5 text-emerald-600" />
-                  <h4 className="text-base font-bold text-slate-900">Studio Utilization</h4>
+              {/* Recent Bookings */}
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-emerald-600" />
+                    <h4 className="text-base font-bold text-slate-900">Recent Bookings</h4>
+                  </div>
+                  <button onClick={() => setAdminTab('bookings')} className="text-xs font-bold text-emerald-600 hover:text-emerald-700">View All</button>
                 </div>
                 
-                <div className="space-y-5">
-                  {rooms.slice(0, 4).map((room, index) => {
-                    const roomBookings = bookings.filter(b => b.studio?.name === room.name).length;
-                    const maxBookings = Math.max(...rooms.map(r => bookings.filter(b => b.studio?.name === r.name).length), 1);
-                    const percentage = bookings.length > 0 ? (roomBookings / maxBookings) * 100 : 0;
-                    
-                    return (
-                      <div key={room.id} className="space-y-2">
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-slate-700 truncate pr-4">{room.name}</span>
-                          <span className="font-black text-[#111111]">{Math.round(percentage)}%</span>
+                <div className="space-y-4 flex-1">
+                  {bookings.slice(0, 4).map((booking, idx) => (
+                    <div key={booking.id || idx} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold">
+                          {booking.customer_name?.charAt(0) || 'U'}
                         </div>
-                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full ${index === 0 ? 'bg-emerald-500' : index === 1 ? 'bg-amber-500' : 'bg-sky-500'}`} 
-                            style={{ width: `${percentage}%` }}
-                          ></div>
+                        <div>
+                          <div className="text-sm font-bold text-slate-900">{booking.customer_name}</div>
+                          <div className="text-[10px] font-bold text-slate-500 uppercase">{booking.studio?.name || 'Studio'} • {booking.date}</div>
                         </div>
                       </div>
-                    );
-                  })}
-                  {rooms.length === 0 && (
-                    <div className="text-sm text-slate-500 text-center py-4">No studio data available.</div>
+                      <div className="text-right">
+                        <div className="text-xs font-black text-slate-900">{booking.start_time}</div>
+                        <div className={`text-[10px] font-bold uppercase ${booking.status === 'CONFIRMED' || booking.status === 'COMPLETED' ? 'text-emerald-600' : 'text-amber-500'}`}>{booking.status}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {bookings.length === 0 && (
+                    <div className="text-sm text-slate-500 text-center py-8 flex flex-col items-center justify-center space-y-2">
+                      <Calendar className="w-8 h-8 text-slate-300" />
+                      <span>No recent bookings found.</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -461,7 +481,7 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
 
         {/* TAB 1: Booking Management Table */}
         {adminTab === 'bookings' && (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
               <h3 className="text-lg font-bold text-slate-900">Reservation Records</h3>
@@ -471,7 +491,7 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                   type="text"
                   placeholder="Search ref or customer..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => { setSearchTerm(e.target.value); setBookingsPage(1); }}
                   className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
                 />
               </div>
@@ -501,8 +521,8 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                       </td>
                     </tr>
                   ) : (
-                    filteredBookings.map(b => (
-                      <tr key={b.id || b.booking_reference} className="hover:bg-slate-50 transition-colors">
+                    paginatedBookings.map(b => (
+                      <tr key={b.id} className="hover:bg-slate-50 transition-colors">
                         <td className="py-3.5 px-4 font-mono font-bold text-emerald-700 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>{b.booking_reference}</td>
                         <td className="py-3.5 px-4 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>
                           <div className="font-bold text-slate-900">{b.customer_name}</div>
@@ -542,6 +562,12 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                   )}
                 </tbody>
               </table>
+              <Pagination 
+                currentPage={bookingsPage} 
+                totalItems={filteredBookings.length} 
+                itemsPerPage={tableItemsPerPage} 
+                onPageChange={setBookingsPage} 
+              />
             </div>
 
           </div>
@@ -650,14 +676,14 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
 
         {/* TAB 2: Studio Suites Manager */}
         {adminTab === 'studios' && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h3 className="text-lg font-bold text-slate-900">Studio Suites</h3>
 
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <select
                   value={capacityFilter}
-                  onChange={(e) => setCapacityFilter(e.target.value)}
+                  onChange={(e) => { setCapacityFilter(e.target.value); setStudiosPage(1); }}
                   className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#111111] flex-1 sm:flex-none cursor-pointer"
                 >
                   <option value="ALL">All Capacities</option>
@@ -746,38 +772,46 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                   + Create Your First Studio
                 </button>
               </div>
-            ) : rooms.filter(room => capacityFilter === 'ALL' || room.max_capacity === parseInt(capacityFilter)).length === 0 ? (
+            ) : filteredRooms.length === 0 ? (
               <div className="text-center py-16 bg-white border border-slate-200 border-dashed rounded-3xl mt-4">
                 <p className="text-slate-500 font-medium">No studios match the selected capacity.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-2">
-                {rooms.filter(room => capacityFilter === 'ALL' || room.max_capacity === parseInt(capacityFilter)).map(room => (
-                  <div key={room.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 flex flex-col justify-between">
+              <div className="mt-2 space-y-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                  {paginatedRooms.map(room => (
+                    <div key={room.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-3 sm:p-6 flex flex-col justify-between">
                     <div>
                       <div className="aspect-square w-full rounded-xl mb-4 overflow-hidden">
                         <img src={room.image} alt={room.name} className="w-full h-full object-cover" />
                       </div>
-                      <h4 className="text-base font-bold text-slate-900 mt-2">{room.name}</h4>
+                      <h4 className="text-sm sm:text-base font-bold text-slate-900 mt-2">{room.name}</h4>
 
                       <div className="space-y-1.5 text-xs text-slate-700 border-t border-slate-100 pt-3 mt-4">
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-0">
                           <span className="font-bold text-slate-500">Max Capacity:</span>
                           <span className="bg-slate-100 px-2 py-1 rounded-md font-extrabold text-[#111111]">{room.max_capacity} Guests</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="pt-4 border-t border-slate-100 mt-6 flex gap-2">
+                    <div className="pt-4 border-t border-slate-100 mt-4 sm:mt-6 flex gap-2">
                       <button onClick={() => openEditModal(room)} className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition-all">
-                        <Edit3 className="w-3.5 h-3.5 text-emerald-600" /> Edit
+                        <Edit3 className="w-3.5 h-3.5 text-emerald-600" /> <span className="hidden sm:inline">Edit</span>
                       </button>
                       <button onClick={() => handleDeleteRoom(room.id)} className="flex-1 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition-all">
-                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                        <Trash2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Delete</span>
                       </button>
                     </div>
                   </div>
                 ))}
+                </div>
+                <Pagination 
+                  currentPage={studiosPage} 
+                  totalItems={filteredRooms.length} 
+                  itemsPerPage={gridItemsPerPage} 
+                  onPageChange={setStudiosPage} 
+                />
               </div>
             )}
           </div>
@@ -785,7 +819,7 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
 
         {/* TAB 3: Security & Audit Logs */}
         {adminTab === 'security' && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
 
             {/* Users List Table */}
@@ -815,13 +849,15 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-slate-500">{new Date(u.created_at).toLocaleString()}</td>
-                        <td className="py-3 px-4 text-right">
-                          <button onClick={() => handleEditUser(u)} className="p-1.5 text-slate-400 hover:text-emerald-600 transition-colors mr-2">
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => handleDeleteUser(u.id)} className="p-1.5 text-slate-400 hover:text-red-600 transition-colors">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                        <td className="py-3 px-4">
+                          <div className="flex justify-end items-center gap-1">
+                            <button onClick={() => handleEditUser(u)} className="p-1.5 text-slate-400 hover:text-emerald-600 transition-colors">
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => handleDeleteUser(u.id)} className="p-1.5 text-slate-400 hover:text-red-600 transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -880,7 +916,7 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
 
         {/* TAB 4: Blogs Manager */}
         {adminTab === 'blogs' && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-slate-900">Platform Blogs</h3>
@@ -914,7 +950,7 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-mono">
-                      {blogs.map(blog => (
+                      {paginatedBlogs.map(blog => (
                         <tr key={blog.id} className="hover:bg-slate-50 transition-colors">
                           <td className="py-3 px-4 text-slate-800 font-bold">{blog.title}</td>
                           <td className="py-3 px-4">
@@ -923,18 +959,26 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                             </span>
                           </td>
                           <td className="py-3 px-4 text-slate-500">{new Date(blog.created_at).toLocaleDateString()}</td>
-                          <td className="py-3 px-4 text-right">
-                            <button onClick={() => openEditBlogModal(blog)} className="p-1.5 text-slate-400 hover:text-emerald-600 transition-colors mr-2">
-                              <Edit3 className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => handleDeleteBlog(blog.id)} className="p-1.5 text-slate-400 hover:text-red-600 transition-colors">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                          <td className="py-3 px-4">
+                            <div className="flex justify-end items-center gap-1">
+                              <button onClick={() => openEditBlogModal(blog)} className="p-1.5 text-slate-400 hover:text-emerald-600 transition-colors">
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button onClick={() => handleDeleteBlog(blog.id)} className="p-1.5 text-slate-400 hover:text-red-600 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  <Pagination 
+                    currentPage={blogsPage} 
+                    totalItems={blogs.length} 
+                    itemsPerPage={tableItemsPerPage} 
+                    onPageChange={setBlogsPage} 
+                  />
                 </div>
               )}
             </div>
