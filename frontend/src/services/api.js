@@ -87,7 +87,7 @@ export const api = {
   holdSlot: (holdData) => request('/bookings/reservations/hold_slot/', { method: 'POST', body: JSON.stringify(holdData) }),
   cancelHold: (holdId) => request(`/bookings/reservations/${holdId}/release_hold/`, { method: 'POST' }),
   updateBookingStatus: (id, status) => request(`/bookings/reservations/${id}/update_status/`, { method: 'PATCH', body: JSON.stringify({ status }) }),
-  getBookedSlots: (studioId, date) => request(`/bookings/reservations/booked_slots/?studio=${studioId}&date=${date}`),
+  getBookedSlots: (studioId, date) => request(`/bookings/reservations/booked_slots/?studio=${studioId}&date=${date}&_t=${Date.now()}`),
   createPaymentOrder: (holdId, customerData) => request(`/bookings/reservations/${holdId}/create_payment_order/`, { method: 'POST', body: JSON.stringify(customerData) }),
   verifyPayment: (holdId, orderId) => request(`/bookings/reservations/${holdId}/verify_payment/`, { method: 'POST', body: JSON.stringify({ order_id: orderId }) }),
 
