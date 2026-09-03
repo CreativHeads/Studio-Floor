@@ -532,6 +532,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                         {formatAMPM(hour).replace(':00', '')}
                       </span>
                       {isHold && <span className="text-[7px] font-black text-amber-500 uppercase tracking-widest mt-0.5">Held</span>}
+                      {isBooked && !isHold && <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Booked</span>}
                     </button>
                   );
                 })}
