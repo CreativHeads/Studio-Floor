@@ -75,11 +75,6 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
   useEffect(() => {
     if (!isOpen) {
-      // If modal is closed while a hold is active, release it
-      if (holdId) {
-        api.cancelHold(holdId).catch(console.error);
-      }
-      
       // Reset modal state when closed so it starts fresh next time
       setStep(1);
       setStep1SubStep('CAPACITY');
@@ -259,7 +254,6 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
         {/* Close Button */}
         <button
           onClick={() => {
-            if (holdId && step === 3) api.cancelHold(holdId).catch(console.error);
             onClose();
           }}
           className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-[#111111] bg-slate-100 rounded-full transition-all z-20"
@@ -656,11 +650,6 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
               <button
                 type="button"
                 onClick={() => {
-                  if (holdId) {
-                    api.cancelHold(holdId).catch(console.error);
-                    setHoldId(null);
-                    setHoldExpiresAt(null);
-                  }
                   setStep(2);
                 }}
                 className="w-1/3 py-3 bg-slate-100 hover:bg-slate-200 text-[#111111] font-bold text-xs rounded-full transition-all flex items-center justify-center gap-1"
