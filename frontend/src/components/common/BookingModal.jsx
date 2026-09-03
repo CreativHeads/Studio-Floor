@@ -75,6 +75,11 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
   useEffect(() => {
     if (!isOpen) {
+      // If modal is closed while a hold is active, release it
+      if (holdId) {
+        api.cancelHold(holdId).catch(console.error);
+      }
+      
       // Reset modal state when closed so it starts fresh next time
       setStep(1);
       setStep1SubStep('CAPACITY');
@@ -85,6 +90,8 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
       setSubmitting(false);
       setHoldId(null);
       setHoldExpiresAt(null);
+      setSelectionStartBlock(null);
+      setSelectionEndBlock(null);
     } else if (initialData) {
       if (initialData.capacity) setGuestCapacity(initialData.capacity);
       if (initialData.date) setBookingDate(initialData.date);
