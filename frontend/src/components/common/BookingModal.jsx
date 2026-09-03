@@ -67,7 +67,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
     if (selectedStudio && bookingDate && step === 2) {
       // Show loading initially or just fetch
       if (bookedSlots.length === 0) setBookedSlots([]);
-      
+
       const fetchSlots = () => {
         api.getBookedSlots(selectedStudio.id, bookingDate)
           .then(data => setBookedSlots(data))
@@ -83,6 +83,9 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
   useEffect(() => {
     if (!isOpen) {
+      if (holdId) {
+        api.cancelHold(holdId).catch(console.error);
+      }
       // Reset modal state when closed so it starts fresh next time
       setStep(1);
       setStep1SubStep('CAPACITY');
@@ -95,7 +98,11 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
       setHoldExpiresAt(null);
       setSelectionStartBlock(null);
       setSelectionEndBlock(null);
-    } else if (initialData) {
+    }
+  }, [isOpen, holdId]);
+
+  useEffect(() => {
+    if (isOpen && initialData) {
       if (initialData.capacity) setGuestCapacity(initialData.capacity);
       if (initialData.date) setBookingDate(initialData.date);
 
@@ -139,19 +146,18 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   const isSelectedStudioValid = selectedStudio && filteredRooms.some(r => r.id === selectedStudio.id);
 
   const formatAMPM = (h) => {
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const hr12 = h % 12 || 12;
-      return `${hr12.toString().padStart(2, '0')}:00 ${ampm}`;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hr12 = h % 12 || 12;
+    return `${hr12.toString().padStart(2, '0')}:00 ${ampm}`;
   };
 
   let selectedSlot = null;
   if (selectionStartBlock !== null && selectionEndBlock !== null) {
-    const endBlockPlusOne = selectionEndBlock + 1;
     selectedSlot = {
       start: `${selectionStartBlock.toString().padStart(2, '0')}:00`,
-      end: `${endBlockPlusOne.toString().padStart(2, '0')}:00`,
-      hours: endBlockPlusOne - selectionStartBlock,
-      label: `${formatAMPM(selectionStartBlock)} - ${formatAMPM(endBlockPlusOne)}`
+      end: `${selectionEndBlock.toString().padStart(2, '0')}:00`,
+      hours: selectionEndBlock - selectionStartBlock,
+      label: `${formatAMPM(selectionStartBlock)} - ${formatAMPM(selectionEndBlock)}`
     };
   }
 
@@ -310,8 +316,8 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                   type="button"
                   onClick={() => setGuestCapacity(cap.value)}
                   className={`px-4 py-3.5 rounded-xl border transition-all flex items-center justify-between group ${guestCapacity === cap.value
-                      ? 'border-[#111111] bg-slate-50 ring-1 ring-[#111111]'
-                      : 'border-[#E5E5E7] bg-white hover:border-slate-300'
+                    ? 'border-[#111111] bg-slate-50 ring-1 ring-[#111111]'
+                    : 'border-[#E5E5E7] bg-white hover:border-slate-300'
                     }`}
                 >
                   <div className="flex flex-col text-left">
@@ -319,8 +325,8 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                     <span className="text-xs font-medium text-slate-500 mt-0.5">{cap.detail}</span>
                   </div>
                   <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${guestCapacity === cap.value
-                      ? 'border-[#111111] bg-[#111111]'
-                      : 'border-slate-300 bg-white group-hover:border-slate-400'
+                    ? 'border-[#111111] bg-[#111111]'
+                    : 'border-slate-300 bg-white group-hover:border-slate-400'
                     }`}>
                     {guestCapacity === cap.value && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                   </div>
@@ -489,14 +495,14 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                 </span>
               </div>
               <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar pb-2">
-                {Array.from({ length: 14 }, (_, i) => i + 8).map((hour) => {
+                {Array.from({ length: 16 }, (_, i) => i + 8).map((hour) => {
                   const slotInfo = bookedSlots.find(b => b.hour === hour);
                   const isBooked = !!slotInfo;
                   const isHold = slotInfo?.status === 'HOLD';
                   const isStart = selectionStartBlock === hour;
                   const isEnd = selectionEndBlock === hour;
                   const isInRange = selectionStartBlock !== null && selectionEndBlock !== null && hour >= selectionStartBlock && hour <= selectionEndBlock;
-                  
+
                   return (
                     <button
                       key={hour}
@@ -504,7 +510,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                       disabled={isBooked}
                       onClick={() => {
                         if (isBooked) return;
-                        if (selectionStartBlock === null || (selectionStartBlock !== null && selectionEndBlock !== null) || hour < selectionStartBlock) {
+                        if (selectionStartBlock === null || (selectionStartBlock !== null && selectionEndBlock !== null) || hour <= selectionStartBlock) {
                           setSelectionStartBlock(hour);
                           setSelectionEndBlock(null);
                         } else {
@@ -520,15 +526,14 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                           setSelectionEndBlock(hour);
                         }
                       }}
-                      className={`py-2 px-1 rounded-xl text-center transition-all flex flex-col items-center justify-center border-2 ${
-                        isBooked
-                          ? isHold ? 'bg-amber-50 border-amber-200 opacity-60 cursor-not-allowed' : 'bg-slate-100 border-slate-200 opacity-40 cursor-not-allowed'
-                          : (isStart || isEnd)
-                            ? 'bg-[#111111] border-[#111111] text-white shadow-md transform scale-105 z-10'
-                            : isInRange
-                              ? 'bg-slate-800 border-slate-800 text-white'
-                              : 'bg-white border-[#E5E5E7] text-slate-700 hover:border-slate-300'
-                      }`}
+                      className={`py-2 px-1 rounded-xl text-center transition-all flex flex-col items-center justify-center border-2 ${isBooked
+                        ? isHold ? 'bg-amber-50 border-amber-200 opacity-60 cursor-not-allowed' : 'bg-slate-100 border-slate-200 opacity-40 cursor-not-allowed'
+                        : (isStart || isEnd)
+                          ? 'bg-[#111111] border-[#111111] text-white shadow-md transform scale-105 z-10'
+                          : isInRange
+                            ? 'bg-slate-800 border-slate-800 text-white'
+                            : 'bg-white border-[#E5E5E7] text-slate-700 hover:border-slate-300'
+                        }`}
                     >
                       <span className={`text-[10px] sm:text-xs font-extrabold ${isBooked ? (isHold ? 'text-amber-500' : 'text-slate-400') : (isInRange || isStart || isEnd) ? 'text-white' : 'text-[#111111]'}`}>
                         {formatAMPM(hour).replace(':00', '')}
@@ -657,7 +662,16 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
             <div className="flex gap-2.5 pt-1">
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  if (holdId) {
+                    try {
+                      await api.cancelHold(holdId);
+                    } catch (e) {
+                      console.error(e);
+                    }
+                    setHoldId(null);
+                    setHoldExpiresAt(null);
+                  }
                   setStep(2);
                 }}
                 className="w-1/3 py-3 bg-slate-100 hover:bg-slate-200 text-[#111111] font-bold text-xs rounded-full transition-all flex items-center justify-center gap-1"

@@ -117,7 +117,7 @@ REST_FRAMEWORK = {
         'anon': '60/minute',
         'user': '300/minute',
         'auth_attempt': '5/minute',
-        'booking_attempt': '10/minute',
+        'booking_attempt': '60/minute',
     }
 }
 

@@ -54,8 +54,8 @@ class BookingViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         
         # A slot is booked if it's NOT cancelled AND (it's NOT a hold OR it's an unexpired hold)
+        # Because we have only one physical studio, any booking blocks all virtual studios
         bookings = Booking.objects.filter(
-            studio_id=studio_id,
             booking_date=date
         ).exclude(status='CANCELLED').exclude(
             Q(status='HOLD') & Q(expires_at__lt=now)
@@ -99,9 +99,8 @@ class BookingViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         from django.db.models import Q
         
-        # Check if already booked or actively held
+        # Check if already booked or actively held across ALL virtual studios
         bookings = Booking.objects.filter(
-            studio_id=studio_id,
             booking_date=booking_date
         ).exclude(status='CANCELLED').exclude(
             Q(status='HOLD') & Q(expires_at__lt=now)
