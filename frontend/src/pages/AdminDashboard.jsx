@@ -21,6 +21,12 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
   const [capacityFilter, setCapacityFilter] = useState('ALL');
   const [selectedBookingForDetails, setSelectedBookingForDetails] = useState(null);
 
+  // Blogs State
+  const [blogs, setBlogs] = useState([]);
+  const [showCreateBlog, setShowCreateBlog] = useState(false);
+  const [editingBlogId, setEditingBlogId] = useState(null);
+  const [newBlog, setNewBlog] = useState({ title: '', content: '', image: null, image_preview: '', image_url: '', tags: '', published: false });
+
   // Create Room State
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -67,6 +73,10 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
     api.getUsers()
       .then(res => setUsersList(res.results || res))
       .catch(() => setUsersList([]))
+
+    api.getBlogs()
+      .then(res => setBlogs(res.results || res))
+      .catch(() => setBlogs([]))
       .finally(() => setLoading(false));
   };
 
@@ -204,6 +214,51 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
     }
   };
 
+  const openCreateBlogModal = () => {
+    setEditingBlogId(null);
+    setNewBlog({ title: '', content: '', image: null, image_preview: '', image_url: '', tags: '', published: false });
+    setShowCreateBlog(true);
+  };
+
+  const openEditBlogModal = (blog) => {
+    setEditingBlogId(blog.id);
+    setNewBlog({ ...blog, image: null, image_preview: blog.image || '' });
+    setShowCreateBlog(true);
+  };
+
+  const handleCreateBlog = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      if (editingBlogId) {
+        const updated = await api.updateBlog(editingBlogId, newBlog);
+        setBlogs(blogs.map(b => b.id === editingBlogId ? updated : b));
+        toast.success('Blog updated successfully!');
+      } else {
+        const created = await api.createBlog(newBlog);
+        setBlogs([created, ...blogs]);
+        toast.success('Blog created successfully!');
+      }
+      setShowCreateBlog(false);
+      setEditingBlogId(null);
+    } catch (err) {
+      toast.error(err.message || 'Failed to save blog');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDeleteBlog = async (id) => {
+    if (window.confirm("Are you sure you want to delete this blog?")) {
+      try {
+        await api.deleteBlog(id);
+        setBlogs(blogs.filter(b => b.id !== id));
+        toast.success("Blog deleted successfully.");
+      } catch (e) {
+        toast.error("Failed to delete blog.");
+      }
+    }
+  };
 
   const filteredBookings = bookings.filter(b =>
     b.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -813,6 +868,145 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                     <div className="pt-2">
                       <button type="submit" disabled={savingUser} className="w-full py-3 bg-[#111111] hover:bg-[#222222] text-white rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50 transition-all shadow-md active:translate-y-0">
                         {savingUser ? 'Saving...' : 'Save User Changes'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>,
+              document.body
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: Blogs Manager */}
+        {adminTab === 'blogs' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-slate-900">Platform Blogs</h3>
+                <button
+                  className="px-4 py-2 bg-[#111111] hover:bg-[#222222] text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                  onClick={openCreateBlogModal}
+                >
+                  + Create New Blog
+                </button>
+              </div>
+              
+              {blogs.length === 0 ? (
+                <div className="text-center py-16 bg-slate-50 border border-slate-200 border-dashed rounded-xl">
+                  <p className="text-slate-500 font-medium text-sm mb-4">No blogs found.</p>
+                  <button
+                    onClick={openCreateBlogModal}
+                    className="px-6 py-2.5 bg-[#111111] hover:bg-[#222222] text-white rounded-xl text-xs font-bold transition-all shadow-md"
+                  >
+                    + Create Your First Blog
+                  </button>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider bg-slate-50">
+                        <th className="py-3 px-4">Title</th>
+                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4">Date</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-mono">
+                      {blogs.map(blog => (
+                        <tr key={blog.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="py-3 px-4 text-slate-800 font-bold">{blog.title}</td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${blog.published ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                              {blog.published ? 'Published' : 'Draft'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-slate-500">{new Date(blog.created_at).toLocaleDateString()}</td>
+                          <td className="py-3 px-4 text-right">
+                            <button onClick={() => openEditBlogModal(blog)} className="p-1.5 text-slate-400 hover:text-emerald-600 transition-colors mr-2">
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => handleDeleteBlog(blog.id)} className="p-1.5 text-slate-400 hover:text-red-600 transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Create/Edit Blog Modal */}
+            {showCreateBlog && createPortal(
+              <div className="fixed inset-0 z-[9999] flex p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
+                <div className="relative m-auto w-full max-w-lg bg-white border border-[#E5E5E7] rounded-3xl p-5 sm:p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-300">
+                  <button
+                    onClick={() => setShowCreateBlog(false)}
+                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-[#111111] bg-slate-50 hover:bg-slate-100 rounded-full transition-all z-20"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+
+                  <div className="mb-5 pr-8">
+                    <h4 className="text-xl font-black text-[#111111] tracking-tight">{editingBlogId ? 'Edit Blog' : 'New Blog'}</h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5 font-medium">Create rich content for your audience.</p>
+                  </div>
+
+                  <form onSubmit={handleCreateBlog} className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#111111] mb-1 uppercase tracking-widest">Title *</label>
+                      <input type="text" required value={newBlog.title} onChange={e => setNewBlog({ ...newBlog, title: e.target.value })} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#111111] focus:bg-white focus:border-[#111111] focus:ring-1 focus:ring-[#111111] focus:outline-none transition-all placeholder:text-slate-300" placeholder="Enter blog title" />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#111111] mb-1 uppercase tracking-widest">Content *</label>
+                      <textarea required value={newBlog.content} onChange={e => setNewBlog({ ...newBlog, content: e.target.value })} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#111111] focus:bg-white focus:border-[#111111] focus:ring-1 focus:ring-[#111111] focus:outline-none transition-all placeholder:text-slate-300 min-h-[120px]" placeholder="Enter blog content (HTML allowed)" />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#111111] mb-1 uppercase tracking-widest">Cover Image</label>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={e => {
+                          if (e.target.files && e.target.files[0]) {
+                            setNewBlog({
+                              ...newBlog,
+                              image: e.target.files[0],
+                              image_preview: URL.createObjectURL(e.target.files[0])
+                            });
+                          }
+                        }} 
+                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#111111] file:text-white hover:file:bg-[#222222] transition-all" 
+                      />
+                      {newBlog.image_preview && (
+                        <div className="mt-2 w-full h-32 rounded-xl overflow-hidden border border-slate-200">
+                          <img src={newBlog.image_preview} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#111111] mb-1 uppercase tracking-widest">Tags</label>
+                      <input type="text" value={newBlog.tags || ''} onChange={e => setNewBlog({ ...newBlog, tags: e.target.value })} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#111111] focus:bg-white focus:border-[#111111] focus:ring-1 focus:ring-[#111111] focus:outline-none transition-all placeholder:text-slate-300" placeholder="e.g., equipment, tutorial, news" />
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2">
+                      <input type="checkbox" id="published" checked={newBlog.published} onChange={e => setNewBlog({ ...newBlog, published: e.target.checked })} className="w-4 h-4 text-[#111111] rounded border-slate-300 focus:ring-[#111111]" />
+                      <label htmlFor="published" className="text-xs font-bold text-slate-700 cursor-pointer">
+                        Publish immediately
+                      </label>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
+                      <button type="button" onClick={() => setShowCreateBlog(false)} className="px-6 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-xs">
+                        Cancel
+                      </button>
+                      <button type="submit" disabled={creating} className="px-6 py-2.5 bg-[#111111] hover:bg-[#222222] text-white font-bold rounded-xl transition-all shadow-md text-xs disabled:opacity-50">
+                        {creating ? 'Saving...' : 'Save Blog'}
                       </button>
                     </div>
                   </form>

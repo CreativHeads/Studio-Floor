@@ -88,13 +88,19 @@ export default function Navbar({ onOpenBooking, onOpenAuth, onOpenMyBookings, cu
                 >
                   Users
                 </button>
+                <button 
+                  onClick={() => setAdminTab('blogs')} 
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${adminTab === 'blogs' ? 'bg-[#111111] text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                >
+                  Blogs
+                </button>
               </div>
             ) : (
               <>
-                <a href="#equipment" onClick={() => setCurrentView('public')} className="hover:text-[#111111] transition-colors">Equipment</a>
-                <a href="#testimonials" onClick={() => setCurrentView('public')} className="hover:text-[#111111] transition-colors">Reviews</a>
-                <a href="#faq" onClick={() => setCurrentView('public')} className="hover:text-[#111111] transition-colors">FAQ</a>
-                <a href="#contact" onClick={() => setCurrentView('public')} className="hover:text-[#111111] transition-colors">Contact</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('public'); }} className="hover:text-[#111111] transition-colors">Equipment</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('public'); }} className="hover:text-[#111111] transition-colors">Reviews</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('public'); }} className="hover:text-[#111111] transition-colors">FAQ</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('public'); }} className="hover:text-[#111111] transition-colors">Contact</a>
               </>
             )}
           </nav>

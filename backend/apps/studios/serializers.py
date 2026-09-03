@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import StudioRoom
+from .models import StudioRoom, Blog
 
 class StudioRoomSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,3 +16,9 @@ class StudioRoomSerializer(serializers.ModelSerializer):
         else:
             ret['image'] = None
         return ret
+
+class BlogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Blog
+        fields = '__all__'
+        read_only_fields = ('slug', 'created_at', 'updated_at')

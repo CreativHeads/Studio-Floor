@@ -81,6 +81,34 @@ export const api = {
   deleteRoom: (id) => request(`/studios/rooms/${id}/`, { method: 'DELETE' }),
   getAddons: () => request('/studios/addons/'),
 
+  // Blogs
+  getBlogs: () => request('/studios/blogs/'),
+  createBlog: (blogData) => {
+    if (blogData.image instanceof File) {
+      const formData = new FormData();
+      Object.keys(blogData).forEach(key => {
+        if (blogData[key] !== null && blogData[key] !== undefined) {
+          formData.append(key, blogData[key]);
+        }
+      });
+      return request('/studios/blogs/', { method: 'POST', body: formData });
+    }
+    return request('/studios/blogs/', { method: 'POST', body: JSON.stringify(blogData) });
+  },
+  updateBlog: (id, blogData) => {
+    if (blogData.image instanceof File) {
+      const formData = new FormData();
+      Object.keys(blogData).forEach(key => {
+        if (blogData[key] !== null && blogData[key] !== undefined) {
+          formData.append(key, blogData[key]);
+        }
+      });
+      return request(`/studios/blogs/${id}/`, { method: 'PATCH', body: formData });
+    }
+    return request(`/studios/blogs/${id}/`, { method: 'PATCH', body: JSON.stringify(blogData) });
+  },
+  deleteBlog: (id) => request(`/studios/blogs/${id}/`, { method: 'DELETE' }),
+
   // Bookings
   getBookings: (email = '') => request(`/bookings/reservations/${email ? `?email=${email}` : ''}`),
   createBooking: (bookingData) => request('/bookings/reservations/', { method: 'POST', body: JSON.stringify(bookingData) }),

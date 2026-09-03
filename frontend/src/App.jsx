@@ -10,10 +10,11 @@ import { Toaster } from 'react-hot-toast';
 const PublicWebsite = lazy(() => import('./pages/PublicWebsite'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const MyPassesPage = lazy(() => import('./pages/MyPassesPage'));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
 
 function MainApp() {
   const { user, isAdmin } = useAuth();
-  const [currentView, setCurrentView] = useState('public'); // 'public' | 'admin'
+  const [currentView, setCurrentView] = useState('public'); // 'public' | 'admin' | 'blogs'
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedStudioForBooking, setSelectedStudioForBooking] = useState(null);
@@ -75,11 +76,13 @@ function MainApp() {
           <AdminDashboard adminTab={adminTab} setAdminTab={setAdminTab} />
         ) : currentView === 'my-passes' ? (
           <MyPassesPage />
+        ) : currentView === 'blogs' ? (
+          <BlogPage />
         ) : null}
       </Suspense>
 
       {/* Footer */}
-      <Footer currentView={currentView} />
+      <Footer currentView={currentView} setCurrentView={setCurrentView} />
 
       {/* Mobile Floating Bottom Bar (Matching Reference Image 2) */}
       <MobileBottomBar 

@@ -14,7 +14,7 @@ def make_admin(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('authentication', '0002_make_mohamedsinan_admin'),
+        ('authentication', '0001_initial'),
     ]
 
     operations = [

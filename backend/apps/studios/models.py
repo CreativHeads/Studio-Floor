@@ -23,3 +23,30 @@ class StudioRoom(models.Model):
 
     def __str__(self):
         return f"{self.name} (${self.hourly_rate}/hr)"
+
+class Blog(models.Model):
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True, blank=True)
+    content = models.TextField()
+    image = models.ImageField(upload_to='blogs/', blank=True, null=True)
+    image_url = models.URLField(max_length=500, blank=True, null=True)
+    tags = models.CharField(max_length=255, blank=True, help_text="Comma separated tags")
+    published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+            # Ensure slug uniqueness
+            original_slug = self.slug
+            counter = 1
+            while Blog.objects.filter(slug=self.slug).exists():
+                self.slug = f'{original_slug}-{counter}'
+                counter += 1
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+

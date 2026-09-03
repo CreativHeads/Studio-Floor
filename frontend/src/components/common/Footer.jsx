@@ -1,7 +1,7 @@
 import React from 'react';
 import { Radio, ShieldCheck, Headphones, MapPin, Mail, Phone } from 'lucide-react';
 
-export default function Footer({ currentView }) {
+export default function Footer({ currentView, setCurrentView }) {
   if (currentView === 'admin') {
     return (
       <footer className="bg-[#F3F3F5] text-slate-500 py-6 border-t border-slate-200">
@@ -61,10 +61,11 @@ export default function Footer({ currentView }) {
 
           {/* Company & Support */}
           <div>
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">Support</h4>
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">Support & Company</h4>
             <ul className="space-y-2.5 text-sm font-medium">
               <li><a href="#faq" className="text-slate-400 hover:text-white transition-colors">FAQ</a></li>
               <li><a href="#contact" className="text-slate-400 hover:text-white transition-colors">Contact Us</a></li>
+              <li><button onClick={() => { setCurrentView?.('blogs'); window.scrollTo(0, 0); }} className="text-slate-400 hover:text-white transition-colors">Blog</button></li>
               <li><a href="#" className="text-slate-400 hover:text-white transition-colors">Cancellation Policy</a></li>
               <li><a href="#" className="text-slate-400 hover:text-white transition-colors">Help Center</a></li>
             </ul>
