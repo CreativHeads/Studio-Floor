@@ -36,6 +36,22 @@ function MainApp() {
     setIsBookingOpen(true);
   };
 
+  const [initialOrderId, setInitialOrderId] = useState(null);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('order_id');
+    const storedHoldId = localStorage.getItem('studio_hold_id');
+
+    if (orderId && storedHoldId) {
+      setInitialOrderId(orderId);
+      setIsBookingOpen(true);
+      
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-[#F3F3F5] text-[#111111] flex flex-col justify-between selection:bg-[#111111] selection:text-white">
       <Toaster 
@@ -102,6 +118,7 @@ function MainApp() {
         onClose={() => setIsBookingOpen(false)} 
         selectedStudio={selectedStudioForBooking}
         initialData={bookingInitialData}
+        initialOrderId={initialOrderId}
         onRequireAuth={() => setIsAuthOpen(true)}
       />
 

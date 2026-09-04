@@ -66,23 +66,24 @@ class BookingViewSet(viewsets.ModelViewSet):
         for b in bookings:
             start_hour = b.start_time.hour
             end_hour = b.end_time.hour
-            # Block the actual hours + 1 hour cleaning buffer
-            for h in range(start_hour, end_hour + 1): 
-                current_status = blocked_hours_dict.get(h)
-                # Prioritize CONFIRMED/COMPLETED over HOLD if there's overlap in cleaning buffers
-                if current_status not in ['CONFIRMED', 'COMPLETED']:
-                    # Identify if this is the user's own hold
-                    is_my_hold = False
-                    if b.status == 'HOLD':
-                        if request.user.is_authenticated and b.user == request.user:
-                            is_my_hold = True
-                        elif current_hold_id and str(b.id) == str(current_hold_id):
-                            is_my_hold = True
-                    
-                    if is_my_hold:
-                        blocked_hours_dict[h] = 'MY_HOLD'
-                    else:
-                        blocked_hours_dict[h] = b.status
+            
+            is_my_booking = False
+            if request.user.is_authenticated and b.user == request.user:
+                is_my_booking = True
+            elif current_hold_id and str(b.id) == str(current_hold_id):
+                is_my_booking = True
+
+            # If it's my booking, don't show the cleaning buffer. Otherwise, include it.
+            block_end = end_hour if is_my_booking else end_hour + 1
+            
+            for h in range(start_hour, block_end):
+                if h <= 23:
+                    current_status = blocked_hours_dict.get(h)
+                    if current_status not in ['CONFIRMED', 'COMPLETED']:
+                        if is_my_booking and b.status == 'HOLD':
+                            blocked_hours_dict[h] = 'MY_HOLD'
+                        else:
+                            blocked_hours_dict[h] = b.status
                 
         blocked_list = [{"hour": k, "status": v} for k, v in blocked_hours_dict.items()]
         return Response(blocked_list)

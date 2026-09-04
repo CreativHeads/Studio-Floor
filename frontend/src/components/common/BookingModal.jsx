@@ -4,7 +4,7 @@ import { MOCK_ROOMS, api, API_BASE } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
-export default function BookingModal({ isOpen, onClose, selectedStudio: initialStudio, onRequireAuth, initialData }) {
+export default function BookingModal({ isOpen, onClose, selectedStudio: initialStudio, onRequireAuth, initialData, initialOrderId }) {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [step1SubStep, setStep1SubStep] = useState('CAPACITY'); // 'CAPACITY' | 'STUDIO'
@@ -104,8 +104,6 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
       setNotes('');
       setConfirmedBooking(null);
       setSubmitting(false);
-      setHoldId(null);
-      setHoldExpiresAt(null);
       setSelectionStartBlock(null);
       setSelectionEndBlock(null);
     }
@@ -124,6 +122,26 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
       }
     }
   }, [isOpen, initialData, initialStudio]);
+
+  // Handle URL Redirects from Payment Gateway
+  useEffect(() => {
+    if (isOpen && initialOrderId && holdId) {
+      setStep(3);
+      setSubmitting(true);
+
+      api.verifyPayment(holdId, initialOrderId)
+        .then((verifyRes) => {
+          setConfirmedBooking(verifyRes);
+          setStep(4);
+          setSubmitting(false);
+          toast.success("Payment verified successfully!");
+        })
+        .catch(err => {
+          toast.error("Payment failed or was cancelled. Please try again.");
+          setSubmitting(false);
+        });
+    }
+  }, [isOpen, initialOrderId, holdId]);
 
   if (!isOpen) return null;
 
@@ -162,12 +180,13 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   };
 
   let selectedSlot = null;
-  if (selectionStartBlock !== null && selectionEndBlock !== null) {
+  if (selectionStartBlock !== null && selectionEndBlock !== null && selectionEndBlock >= selectionStartBlock) {
     selectedSlot = {
       start: `${selectionStartBlock.toString().padStart(2, '0')}:00`,
       end: `${(selectionEndBlock + 1).toString().padStart(2, '0')}:00`,
-      hours: (selectionEndBlock - selectionStartBlock) + 1,
-      label: `${formatAMPM(selectionStartBlock)} - ${formatAMPM(selectionEndBlock + 1)}`
+      hours: selectionEndBlock - selectionStartBlock,
+      // Purely cosmetic: use selectionEndBlock to hide the +1 cleaning hour from the UI text
+      label: `${formatAMPM(selectionStartBlock)} - ${formatAMPM(selectionEndBlock)}`
     };
   }
 
@@ -511,9 +530,10 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                   const isMyHold = slotInfo?.status === 'MY_HOLD';
                   const isBooked = !!slotInfo && !isMyHold; // Not booked if it's their own hold!
                   const isHold = slotInfo?.status === 'HOLD';
+                  
                   const isStart = selectionStartBlock === hour;
                   const isEnd = selectionEndBlock === hour;
-                  const isInRange = selectionStartBlock !== null && selectionEndBlock !== null && hour >= selectionStartBlock && hour <= selectionEndBlock;
+                  const isInRange = selectionStartBlock !== null && selectionEndBlock !== null && hour > selectionStartBlock && hour < selectionEndBlock;
 
                   return (
                     <button
@@ -522,7 +542,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                       disabled={isBooked}
                       onClick={() => {
                         if (isBooked) return;
-                        
+
                         if (selectionStartBlock === null || (selectionStartBlock !== null && selectionEndBlock !== null) || hour < selectionStartBlock) {
                           setSelectionStartBlock(hour);
                           setSelectionEndBlock(null);
@@ -584,7 +604,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
               </button>
               <button
                 onClick={handleHoldSlot}
-                disabled={submitting || !selectedSlot}
+                disabled={submitting || !selectedSlot || selectedSlot.hours === 0}
                 className="w-2/3 py-3 bg-[#111111] hover:bg-[#222222] text-white font-bold text-xs uppercase tracking-wider rounded-full flex items-center justify-center gap-1.5 shadow-md transition-all disabled:opacity-40"
               >
                 <span>{submitting ? 'Holding Slot...' : 'Proceed to Checkout'}</span>
