@@ -155,9 +155,9 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   if (selectionStartBlock !== null && selectionEndBlock !== null) {
     selectedSlot = {
       start: `${selectionStartBlock.toString().padStart(2, '0')}:00`,
-      end: `${selectionEndBlock.toString().padStart(2, '0')}:00`,
-      hours: selectionEndBlock - selectionStartBlock,
-      label: `${formatAMPM(selectionStartBlock)} - ${formatAMPM(selectionEndBlock)}`
+      end: `${(selectionEndBlock + 1).toString().padStart(2, '0')}:00`,
+      hours: (selectionEndBlock - selectionStartBlock) + 1,
+      label: `${formatAMPM(selectionStartBlock)} - ${formatAMPM(selectionEndBlock + 1)}`
     };
   }
 
@@ -510,7 +510,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                       disabled={isBooked}
                       onClick={() => {
                         if (isBooked) return;
-                        if (selectionStartBlock === null || (selectionStartBlock !== null && selectionEndBlock !== null) || hour <= selectionStartBlock) {
+                        if (selectionStartBlock === null || (selectionStartBlock !== null && selectionEndBlock !== null) || hour < selectionStartBlock) {
                           setSelectionStartBlock(hour);
                           setSelectionEndBlock(null);
                         } else {

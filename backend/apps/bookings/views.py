@@ -184,7 +184,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                     "customer_name": booking.customer_name or 'Guest Creator'
                 },
                 "order_meta": {
-                    "return_url": "http://localhost:3000/?order_id={order_id}"
+                    "return_url": f"{request.META.get('HTTP_ORIGIN') or getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')}/?order_id={{order_id}}"
                 }
             }
             
