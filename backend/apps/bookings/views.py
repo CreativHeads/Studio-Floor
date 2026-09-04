@@ -47,6 +47,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     def booked_slots(self, request):
         studio_id = request.query_params.get('studio')
         date = request.query_params.get('date')
+        current_hold_id = request.query_params.get('hold_id')
         if not studio_id or not date:
             return Response([])
         
@@ -70,7 +71,18 @@ class BookingViewSet(viewsets.ModelViewSet):
                 current_status = blocked_hours_dict.get(h)
                 # Prioritize CONFIRMED/COMPLETED over HOLD if there's overlap in cleaning buffers
                 if current_status not in ['CONFIRMED', 'COMPLETED']:
-                    blocked_hours_dict[h] = b.status
+                    # Identify if this is the user's own hold
+                    is_my_hold = False
+                    if b.status == 'HOLD':
+                        if request.user.is_authenticated and b.user == request.user:
+                            is_my_hold = True
+                        elif current_hold_id and str(b.id) == str(current_hold_id):
+                            is_my_hold = True
+                    
+                    if is_my_hold:
+                        blocked_hours_dict[h] = 'MY_HOLD'
+                    else:
+                        blocked_hours_dict[h] = b.status
                 
         blocked_list = [{"hour": k, "status": v} for k, v in blocked_hours_dict.items()]
         return Response(blocked_list)
@@ -92,12 +104,19 @@ class BookingViewSet(viewsets.ModelViewSet):
         start_time = request.data.get('start_time')
         end_time = request.data.get('end_time')
         duration_hours = request.data.get('duration_hours', 1)
+        previous_hold_id = request.data.get('previous_hold_id')
         
         if not all([studio_id, booking_date, start_time, end_time]):
             return Response({'error': 'Missing required fields'}, status=status.HTTP_400_BAD_REQUEST)
             
         now = timezone.now()
         from django.db.models import Q
+
+        # Delete previous holds by this user or session to free up the slot for them to change time
+        if request.user.is_authenticated:
+            Booking.objects.filter(user=request.user, status='HOLD').delete()
+        if previous_hold_id:
+            Booking.objects.filter(id=previous_hold_id, status='HOLD').delete()
         
         # Check if already booked or actively held across ALL virtual studios
         bookings = Booking.objects.filter(

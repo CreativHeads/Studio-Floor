@@ -93,6 +93,12 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    const activeHoldId = localStorage.getItem('studio_hold_id');
+    if (activeHoldId) {
+      api.cancelHold(activeHoldId).catch(() => {});
+      localStorage.removeItem('studio_hold_id');
+      localStorage.removeItem('studio_hold_expires_at');
+    }
     setUser(null);
     setToken(null);
     localStorage.removeItem('studioplus_token');

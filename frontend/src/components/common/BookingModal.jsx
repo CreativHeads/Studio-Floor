@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, CheckCircle2, ShieldCheck, Sparkles, ChevronRight, ChevronLeft, QrCode, CreditCard, Sun, Sunset, Moon } from 'lucide-react';
-import { MOCK_ROOMS, api } from '../../services/api';
+import { MOCK_ROOMS, api, API_BASE } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -22,8 +22,18 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   const [notes, setNotes] = useState('');
   const [confirmedBooking, setConfirmedBooking] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [holdId, setHoldId] = useState(null);
-  const [holdExpiresAt, setHoldExpiresAt] = useState(null);
+  const [holdId, setHoldId] = useState(() => localStorage.getItem('studio_hold_id') || null);
+  const [holdExpiresAt, setHoldExpiresAt] = useState(() => localStorage.getItem('studio_hold_expires_at') || null);
+
+  useEffect(() => {
+    if (holdId) localStorage.setItem('studio_hold_id', holdId);
+    else localStorage.removeItem('studio_hold_id');
+  }, [holdId]);
+
+  useEffect(() => {
+    if (holdExpiresAt) localStorage.setItem('studio_hold_expires_at', holdExpiresAt);
+    else localStorage.removeItem('studio_hold_expires_at');
+  }, [holdExpiresAt]);
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
 
   useEffect(() => {
@@ -47,6 +57,9 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
     return () => clearInterval(interval);
   }, [step, holdExpiresAt]);
 
+  // We no longer release the hold on unload!
+  // The hold persists in localStorage and the DB, allowing the user to resume or change it.
+
   useEffect(() => {
     if (user) {
       setName(prev => prev || `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username);
@@ -69,7 +82,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
       if (bookedSlots.length === 0) setBookedSlots([]);
 
       const fetchSlots = () => {
-        api.getBookedSlots(selectedStudio.id, bookingDate)
+        api.getBookedSlots(selectedStudio.id, bookingDate, holdId)
           .then(data => setBookedSlots(data))
           .catch(console.error);
       };
@@ -79,13 +92,10 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
       return () => clearInterval(intervalId);
     }
-  }, [selectedStudio, bookingDate, step]);
+  }, [selectedStudio, bookingDate, step, holdId]);
 
   useEffect(() => {
     if (!isOpen) {
-      if (holdId) {
-        api.cancelHold(holdId).catch(console.error);
-      }
       // Reset modal state when closed so it starts fresh next time
       setStep(1);
       setStep1SubStep('CAPACITY');
@@ -99,7 +109,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
       setSelectionStartBlock(null);
       setSelectionEndBlock(null);
     }
-  }, [isOpen, holdId]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && initialData) {
@@ -172,7 +182,8 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
         booking_date: bookingDate,
         start_time: `${selectedSlot.start}:00`,
         end_time: `${selectedSlot.end}:00`,
-        duration_hours: selectedSlot.hours
+        duration_hours: selectedSlot.hours,
+        previous_hold_id: holdId // Pass previous hold to override it
       };
       const res = await api.holdSlot(payload);
       setHoldId(res.id);
@@ -497,7 +508,8 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
               <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar pb-2">
                 {Array.from({ length: 16 }, (_, i) => i + 8).map((hour) => {
                   const slotInfo = bookedSlots.find(b => b.hour === hour);
-                  const isBooked = !!slotInfo;
+                  const isMyHold = slotInfo?.status === 'MY_HOLD';
+                  const isBooked = !!slotInfo && !isMyHold; // Not booked if it's their own hold!
                   const isHold = slotInfo?.status === 'HOLD';
                   const isStart = selectionStartBlock === hour;
                   const isEnd = selectionEndBlock === hour;
@@ -510,13 +522,14 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                       disabled={isBooked}
                       onClick={() => {
                         if (isBooked) return;
+                        
                         if (selectionStartBlock === null || (selectionStartBlock !== null && selectionEndBlock !== null) || hour < selectionStartBlock) {
                           setSelectionStartBlock(hour);
                           setSelectionEndBlock(null);
                         } else {
                           // Check if any blocked hour is in between
                           for (let h = selectionStartBlock; h <= hour; h++) {
-                            if (bookedSlots.some(b => b.hour === h)) {
+                            if (bookedSlots.some(b => b.hour === h && b.status !== 'MY_HOLD')) {
                               toast.error("Cannot select across a booked time slot.");
                               setSelectionStartBlock(hour);
                               setSelectionEndBlock(null);
@@ -532,13 +545,16 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                           ? 'bg-[#111111] border-[#111111] text-white shadow-md transform scale-105 z-10'
                           : isInRange
                             ? 'bg-slate-800 border-slate-800 text-white'
-                            : 'bg-white border-[#E5E5E7] text-slate-700 hover:border-slate-300'
+                            : isMyHold
+                              ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-sm cursor-pointer'
+                              : 'bg-white border-[#E5E5E7] text-slate-700 hover:border-slate-300'
                         }`}
                     >
-                      <span className={`text-[10px] sm:text-xs font-extrabold ${isBooked ? (isHold ? 'text-amber-500' : 'text-slate-400') : (isInRange || isStart || isEnd) ? 'text-white' : 'text-[#111111]'}`}>
+                      <span className={`text-[10px] sm:text-xs font-extrabold ${isBooked ? (isHold ? 'text-amber-500' : 'text-slate-400') : (isInRange || isStart || isEnd) ? 'text-white' : (isMyHold ? 'text-emerald-600' : 'text-[#111111]')}`}>
                         {formatAMPM(hour).replace(':00', '')}
                       </span>
                       {isHold && <span className="text-[7px] font-black text-amber-500 uppercase tracking-widest mt-0.5">Held</span>}
+                      {isMyHold && !isStart && !isEnd && !isInRange && <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest mt-0.5">Your Hold</span>}
                       {isBooked && !isHold && <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Booked</span>}
                     </button>
                   );
@@ -662,18 +678,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
             <div className="flex gap-2.5 pt-1">
               <button
                 type="button"
-                onClick={async () => {
-                  if (holdId) {
-                    try {
-                      await api.cancelHold(holdId);
-                    } catch (e) {
-                      console.error(e);
-                    }
-                    setHoldId(null);
-                    setHoldExpiresAt(null);
-                  }
-                  setStep(2);
-                }}
+                onClick={() => setStep(2)}
                 className="w-1/3 py-3 bg-slate-100 hover:bg-slate-200 text-[#111111] font-bold text-xs rounded-full transition-all flex items-center justify-center gap-1"
               >
                 <ChevronLeft className="w-3.5 h-3.5" /> Back

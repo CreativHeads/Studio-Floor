@@ -1,5 +1,5 @@
 const VITE_API_URL = import.meta.env.VITE_API_URL;
-const API_BASE = VITE_API_URL ? (VITE_API_URL.endsWith('/api') ? VITE_API_URL : `${VITE_API_URL}/api`) : '/api';
+export const API_BASE = VITE_API_URL ? (VITE_API_URL.endsWith('/api') ? VITE_API_URL : `${VITE_API_URL}/api`) : '/api';
 
 // Helper to get stored auth token
 export const getAuthToken = () => localStorage.getItem('studioplus_token');
@@ -115,7 +115,7 @@ export const api = {
   holdSlot: (holdData) => request('/bookings/reservations/hold_slot/', { method: 'POST', body: JSON.stringify(holdData) }),
   cancelHold: (holdId) => request(`/bookings/reservations/${holdId}/release_hold/`, { method: 'POST' }),
   updateBookingStatus: (id, status) => request(`/bookings/reservations/${id}/update_status/`, { method: 'PATCH', body: JSON.stringify({ status }) }),
-  getBookedSlots: (studioId, date) => request(`/bookings/reservations/booked_slots/?studio=${studioId}&date=${date}&_t=${Date.now()}`),
+  getBookedSlots: (studioId, date, holdId = null) => request(`/bookings/reservations/booked_slots/?studio=${studioId}&date=${date}${holdId ? `&hold_id=${holdId}` : ''}&_t=${Date.now()}`),
   createPaymentOrder: (holdId, customerData) => request(`/bookings/reservations/${holdId}/create_payment_order/`, { method: 'POST', body: JSON.stringify(customerData) }),
   verifyPayment: (holdId, orderId) => request(`/bookings/reservations/${holdId}/verify_payment/`, { method: 'POST', body: JSON.stringify({ order_id: orderId }) }),
 
