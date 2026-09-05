@@ -23,6 +23,25 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
   const [capacityFilter, setCapacityFilter] = useState('ALL');
   const [selectedBookingForDetails, setSelectedBookingForDetails] = useState(null);
 
+  const formatTimeAMPM = (timeStr) => {
+    if (!timeStr) return '';
+    const [h, m] = timeStr.split(':');
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hr12 = hour % 12 || 12;
+    return `${hr12.toString().padStart(2, '0')}:${m} ${ampm}`;
+  };
+
+  const formatPhone = (phone) => {
+    if (!phone) return null;
+    const digits = phone.replace(/[^0-9]/g, '');
+    if (phone.startsWith('+')) return phone;
+    if (digits.length === 10) return `+91 ${digits}`;
+    if (digits.length === 11 && digits.startsWith('0')) return `+91 ${digits.slice(1)}`;
+    if (digits.length === 12 && (digits.startsWith('91') || digits.startsWith('091'))) return `+91 ${digits.slice(-10)}`;
+    return phone;
+  };
+
   // Blogs State
   const [blogs, setBlogs] = useState([]);
   const [showCreateBlog, setShowCreateBlog] = useState(false);
@@ -526,12 +545,12 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                         <td className="py-3.5 px-4 font-mono font-bold text-emerald-700 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>{b.booking_reference}</td>
                         <td className="py-3.5 px-4 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>
                           <div className="font-bold text-slate-900">{b.customer_name}</div>
-                          <div className="text-[10px] text-slate-500">{b.customer_email}</div>
+                          <div className="text-[10px] text-slate-500 font-mono">{b.customer_phone || 'No phone'}</div>
                         </td>
                         <td className="py-3.5 px-4 font-semibold text-slate-700 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>{b.studio_details?.name || 'Studio Room'}</td>
                         <td className="py-3.5 px-4 text-slate-700 cursor-pointer" onClick={() => setSelectedBookingForDetails(b)}>
                           <div>{b.booking_date}</div>
-                          <div className="text-[10px] text-slate-500 font-mono">{b.start_time} - {b.end_time}</div>
+                          <div className="text-[10px] text-slate-500 font-mono">{formatTimeAMPM(b.start_time)} - {formatTimeAMPM(b.end_time)}</div>
                         </td>
                         <td className="py-3.5 px-4">
                           <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${b.status === 'CONFIRMED'
@@ -602,16 +621,20 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                   <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> Customer Information</div>
                     <div className="text-lg font-black text-slate-900 leading-tight">{selectedBookingForDetails.customer_name}</div>
-                    <div className="text-sm text-slate-500 mt-1">{selectedBookingForDetails.customer_email}</div>
+                    {selectedBookingForDetails.notes && (
+                      <div className="text-[11px] text-slate-500 mt-1.5 p-2 bg-slate-100 rounded-lg border border-slate-200 font-medium whitespace-pre-wrap">
+                        {selectedBookingForDetails.notes}
+                      </div>
+                    )}
 
                     {selectedBookingForDetails.customer_phone ? (
                       <div className="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between">
-                        <span className="text-sm text-slate-700 font-bold font-mono">{selectedBookingForDetails.customer_phone}</span>
+                        <span className="text-sm text-slate-700 font-bold font-mono">{formatPhone(selectedBookingForDetails.customer_phone)}</span>
                         <div className="flex items-center gap-2">
-                          <a href={`tel:${selectedBookingForDetails.customer_phone}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-lg transition-all text-xs font-bold" title="Call">
+                          <a href={`tel:${formatPhone(selectedBookingForDetails.customer_phone).replace(/ /g, '')}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-lg transition-all text-xs font-bold" title="Call">
                             <Phone className="w-3.5 h-3.5" /> Call
                           </a>
-                          <a href={`https://wa.me/${selectedBookingForDetails.customer_phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-500 hover:text-white text-green-600 rounded-lg transition-all text-xs font-bold" title="WhatsApp">
+                          <a href={`https://wa.me/${formatPhone(selectedBookingForDetails.customer_phone).replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-500 hover:text-white text-green-600 rounded-lg transition-all text-xs font-bold" title="WhatsApp">
                             <MessageCircle className="w-3.5 h-3.5" /> Chat
                           </a>
                         </div>
@@ -625,7 +648,7 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                   <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Schedule Details</div>
                     <div className="text-lg font-black text-slate-900 leading-tight">{selectedBookingForDetails.booking_date}</div>
-                    <div className="text-sm text-slate-500 mt-1 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {selectedBookingForDetails.start_time} - {selectedBookingForDetails.end_time}</div>
+                    <div className="text-sm text-slate-500 mt-1 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {formatTimeAMPM(selectedBookingForDetails.start_time)} - {formatTimeAMPM(selectedBookingForDetails.end_time)}</div>
                     <div className="mt-4 pt-4 border-t border-slate-200">
                       <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg text-xs font-bold">
                         {selectedBookingForDetails.duration_hours} Hour Session
