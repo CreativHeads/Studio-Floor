@@ -36,6 +36,17 @@ export const setupRecaptcha = (containerId = 'recaptcha-container') => {
   return window.recaptchaVerifier;
 };
 
+export const clearRecaptcha = () => {
+  if (window.recaptchaVerifier) {
+    try {
+      window.recaptchaVerifier.clear();
+    } catch (e) {
+      console.warn('Error clearing recaptcha:', e);
+    }
+    window.recaptchaVerifier = null;
+  }
+};
+
 /**
  * Send Phone OTP via Firebase
  * @param {string} phoneNumber E.164 formatted phone number (e.g. +14155552671)

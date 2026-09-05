@@ -55,6 +55,7 @@ export const api = {
   // Auth
   login: (email, password) => request('/auth/login/', { method: 'POST', body: JSON.stringify({ email, password }) }),
   register: (userData) => request('/auth/register/', { method: 'POST', body: JSON.stringify(userData) }),
+  firebaseLogin: (idToken, fullName) => request('/auth/firebase-login/', { method: 'POST', body: JSON.stringify({ id_token: idToken, full_name: fullName }) }),
   getProfile: () => request('/auth/profile/'),
   getUsers: () => request('/auth/users/'),
   updateUser: (id, userData) => request(`/auth/users/${id}/`, { method: 'PATCH', body: JSON.stringify(userData) }),

@@ -831,7 +831,7 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                   <thead>
                     <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider bg-slate-50">
                       <th className="py-3 px-4">Name</th>
-                      <th className="py-3 px-4">Email</th>
+                      <th className="py-3 px-4">Number</th>
                       <th className="py-3 px-4">Role</th>
                       <th className="py-3 px-4">Joined Date</th>
                       <th className="py-3 px-4 text-right">Actions</th>
@@ -841,7 +841,7 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                     {usersList.map(u => (
                       <tr key={u.id} className="hover:bg-slate-50 transition-colors">
                         <td className="py-3 px-4 text-slate-800 font-bold">{u.first_name || u.username}</td>
-                        <td className="py-3 px-4 text-slate-500">{u.email}</td>
+                        <td className="py-3 px-4 text-slate-500">{u.phone_number || (u.email.includes('@studiofloor.com') ? '+' + u.email.split('@')[0] : u.email)}</td>
                         <td className="py-3 px-4">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${u.role === 'ADMIN' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
                             }`}>

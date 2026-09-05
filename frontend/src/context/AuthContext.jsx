@@ -52,34 +52,10 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const loginWithPhoneOtp = async (fullName, phoneNumber, firebaseUser = null, role = 'CREATOR', userEmail = null) => {
+  const loginWithFirebaseToken = async (idToken, fullName) => {
     setLoading(true);
     try {
-      const generatedPassword = `OTP@${phoneNumber.replace(/[^0-9]/g, '')}#StudioFloor`;
-      const nameParts = (fullName || 'Creator User').trim().split(' ');
-      const firstName = nameParts[0] || 'Creator';
-      const lastName = nameParts.slice(1).join(' ') || '';
-      const email = userEmail || `${phoneNumber.replace(/[^0-9]/g, '')}@studiofloor.com`;
-
-      let loginRes;
-      try {
-        loginRes = await api.login(email, generatedPassword);
-      } catch (e) {
-        // User does not exist, let's register them!
-        const userData = {
-          first_name: firstName,
-          last_name: lastName,
-          username: phoneNumber.replace(/[^0-9]/g, ''),
-          email: email,
-          phone_number: phoneNumber,
-          password: generatedPassword,
-          password_confirm: generatedPassword,
-          role: role === 'CREATOR' ? 'CUSTOMER' : (role || 'CUSTOMER')
-        };
-        await api.register(userData);
-        loginRes = await api.login(email, generatedPassword);
-      }
-
+      const loginRes = await api.firebaseLogin(idToken, fullName);
       setToken(loginRes.access);
       setUser(loginRes.user);
       localStorage.setItem('studioplus_token', loginRes.access);
@@ -88,7 +64,7 @@ export function AuthProvider({ children }) {
       return { success: true, user: loginRes.user };
     } catch (err) {
       setLoading(false);
-      return { success: false, error: err.message || 'OTP real authentication failed' };
+      return { success: false, error: err.message || 'Firebase authentication failed' };
     }
   };
 
@@ -108,7 +84,7 @@ export function AuthProvider({ children }) {
   const isAdmin = user && (user.role === 'ADMIN' || user.email === 'admin@studioplus.com');
 
   return (
-    <AuthContext.Provider value={{ user, token, isAdmin, loading, login, register, loginWithPhoneOtp, logout }}>
+    <AuthContext.Provider value={{ user, token, isAdmin, loading, login, register, loginWithFirebaseToken, logout }}>
       {children}
     </AuthContext.Provider>
   );

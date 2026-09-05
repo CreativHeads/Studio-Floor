@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import CustomTokenObtainPairView, RegisterView, ProfileView, UserListView, UserDetailView
+from .views import CustomTokenObtainPairView, RegisterView, ProfileView, UserListView, UserDetailView, FirebaseLoginView
 
 urlpatterns = [
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -9,4 +9,5 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),
     path('users/', UserListView.as_view(), name='users_list'),
     path('users/<int:pk>/', UserDetailView.as_view(), name='user_detail'),
+    path('firebase-login/', FirebaseLoginView.as_view(), name='firebase_login'),
 ]

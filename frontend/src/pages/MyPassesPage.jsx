@@ -76,7 +76,7 @@ export default function MyPassesPage() {
   return (
     <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 sm:pt-8 sm:pb-16 min-h-screen">
       <div className="relative bg-white text-[#111111] rounded-[2rem] p-6 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#E5E5E7] mt-4">
-        
+
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-10">
           <div className="w-12 h-12 rounded-2xl bg-[#F3F3F5] border border-[#E5E5E7] flex items-center justify-center text-[#111111] shadow-sm">
@@ -101,27 +101,26 @@ export default function MyPassesPage() {
             </div>
           ) : selectedBooking ? (
             <div className="animate-in fade-in zoom-in-95 duration-300">
-              <button 
+              <button
                 onClick={() => setSelectedBooking(null)}
                 className="text-xs font-bold text-slate-500 hover:text-[#111111] mb-6 flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded-full bg-[#F3F3F5] hover:bg-[#E5E5E7] w-fit"
               >
                 <ChevronLeft className="w-3.5 h-3.5" /> Back to all reservations
               </button>
-              
+
               <div className="relative p-5 sm:p-8 bg-[#F3F3F5] border border-[#E5E5E7] rounded-3xl max-w-xl mx-auto shadow-sm print-only-card">
                 {/* Ticket cutouts */}
                 <div className="absolute top-1/2 -left-3 -mt-3 w-6 h-6 bg-white border-r border-[#E5E5E7] rounded-full z-10 print-hide"></div>
                 <div className="absolute top-1/2 -right-3 -mt-3 w-6 h-6 bg-white border-l border-[#E5E5E7] rounded-full z-10 print-hide"></div>
-                
+
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-dashed border-[#d1d1d6] gap-2">
-                  <span className={`px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-md w-fit ${
-                    selectedBooking.status === 'CONFIRMED' 
-                      ? 'bg-emerald-100 text-emerald-800' 
-                      : selectedBooking.status === 'CANCELLED' 
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-amber-100 text-amber-800'
-                  }`}>
+                  <span className={`px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-md w-fit ${selectedBooking.status === 'CONFIRMED'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : selectedBooking.status === 'CANCELLED'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}>
                     {selectedBooking.status}
                   </span>
                   <div className="flex items-center gap-3">
@@ -133,7 +132,7 @@ export default function MyPassesPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Body */}
                 <div className="pt-6 pb-8">
                   <h4 className="font-black text-xl sm:text-2xl text-[#111111] tracking-tight mb-5">{selectedBooking.studio_details?.name || 'Studio Room'}</h4>
@@ -168,19 +167,19 @@ export default function MyPassesPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Footer */}
                 <div className="pt-6 border-t border-dashed border-[#d1d1d6]">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
                     <div className="flex space-x-[2px] opacity-40 justify-center">
                       {/* Stylized Barcode */}
-                      {[1,3,1,4,2,1,5,1,2,4,1,2,3,1].map((w, i) => (
-                        <div key={i} className={`h-8 bg-[#111111] rounded-full min-w-[${w*1.5}px]`} style={{ width: `${w * 2}px` }}></div>
+                      {[1, 3, 1, 4, 2, 1, 5, 1, 2, 4, 1, 2, 3, 1].map((w, i) => (
+                        <div key={i} className={`h-8 bg-[#111111] rounded-full min-w-[${w * 1.5}px]`} style={{ width: `${w * 2}px` }}></div>
                       ))}
                     </div>
-                    
+
                     {selectedBooking.status !== 'CANCELLED' && (
-                      <button 
+                      <button
                         onClick={() => handleCancelBooking(selectedBooking.id)}
                         className="text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 px-5 py-2.5 rounded-xl transition-all w-full sm:w-auto print-hide"
                       >
@@ -194,29 +193,28 @@ export default function MyPassesPage() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {bookings.map(b => (
-                <div 
-                  key={b.id || b.booking_reference} 
+                <div
+                  key={b.id || b.booking_reference}
                   onClick={() => setSelectedBooking(b)}
                   className="relative p-5 sm:p-6 bg-white border border-[#E5E5E7] hover:border-[#111111] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 rounded-3xl overflow-hidden group cursor-pointer"
                 >
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-[#111111] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
+
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg ${
-                        b.status === 'CONFIRMED' 
-                          ? 'bg-emerald-100 text-emerald-800' 
-                          : b.status === 'CANCELLED' 
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-amber-100 text-amber-800'
-                      }`}>
+                      <span className={`px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg ${b.status === 'CONFIRMED'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : b.status === 'CANCELLED'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}>
                         {b.status}
                       </span>
                       <span className="font-mono text-[10px] font-bold text-slate-400 group-hover:text-slate-600 transition-colors">REF: {b.booking_reference}</span>
                     </div>
-                    
+
                     <h4 className="font-black text-lg sm:text-xl text-[#111111] tracking-tight group-hover:text-emerald-700 transition-colors">{b.studio_details?.name || 'Studio Room'}</h4>
-                    
+
                     <div className="flex flex-col sm:flex-row gap-2 mt-2">
                       <div className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5 bg-[#F3F3F5] px-3 py-2 rounded-lg border border-[#E5E5E7]">
                         <Calendar className="w-3.5 h-3.5 text-amber-500" />
