@@ -68,6 +68,22 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const devLogin = async (phoneNumber, fullName) => {
+    setLoading(true);
+    try {
+      const loginRes = await api.devLogin(phoneNumber, fullName);
+      setToken(loginRes.access);
+      setUser(loginRes.user);
+      localStorage.setItem('studioplus_token', loginRes.access);
+      localStorage.setItem('studioplus_user', JSON.stringify(loginRes.user));
+      setLoading(false);
+      return { success: true, user: loginRes.user };
+    } catch (err) {
+      setLoading(false);
+      return { success: false, error: err.message };
+    }
+  };
+
   const logout = () => {
     const activeHoldId = localStorage.getItem('studio_hold_id');
     if (activeHoldId) {
@@ -84,7 +100,7 @@ export function AuthProvider({ children }) {
   const isAdmin = user && (user.role === 'ADMIN' || user.email === 'admin@studioplus.com');
 
   return (
-    <AuthContext.Provider value={{ user, token, isAdmin, loading, login, register, loginWithFirebaseToken, logout }}>
+    <AuthContext.Provider value={{ user, token, isAdmin, loading, login, register, loginWithFirebaseToken, devLogin, logout }}>
       {children}
     </AuthContext.Provider>
   );

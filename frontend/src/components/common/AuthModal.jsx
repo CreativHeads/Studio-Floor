@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { setupRecaptcha, sendPhoneOtp, verifyPhoneOtp, clearRecaptcha } from '../../services/firebase';
 
 export default function AuthModal({ isOpen, onClose }) {
-  const { loginWithFirebaseToken, loading } = useAuth();
+  const { loginWithFirebaseToken, devLogin, loading } = useAuth();
   
   // Form States
   const [fullName, setFullName] = useState('');
@@ -183,6 +183,27 @@ export default function AuthModal({ isOpen, onClose }) {
               className="w-full py-2.5 mt-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all disabled:opacity-50"
             >
               Change Number / Resend OTP
+            </button>
+          )}
+
+          {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (!phoneNumber || phoneNumber.length < 5) return toast.error('Enter phone number first');
+                const formattedNumber = `${countryCode}${phoneNumber}`;
+                const res = await devLogin(formattedNumber, fullName);
+                if (res.success) {
+                  toast.success('Dev Login successful!');
+                  setTimeout(() => onClose(), 500);
+                } else {
+                  toast.error(res.error);
+                }
+              }}
+              disabled={submitting || loading}
+              className="w-full py-2.5 mt-2 border-2 border-dashed border-red-500 bg-red-50 text-red-600 hover:bg-red-100 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all disabled:opacity-50"
+            >
+              🛠️ Localhost DEV LOGIN (No OTP)
             </button>
           )}
         </form>

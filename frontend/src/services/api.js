@@ -60,6 +60,7 @@ export const api = {
   getUsers: () => request('/auth/users/'),
   updateUser: (id, userData) => request(`/auth/users/${id}/`, { method: 'PATCH', body: JSON.stringify(userData) }),
   deleteUser: (id) => request(`/auth/users/${id}/`, { method: 'DELETE' }),
+  devLogin: (phoneNumber, fullName) => request('/auth/dev-login/', { method: 'POST', body: JSON.stringify({ phone_number: phoneNumber, full_name: fullName }) }),
 
   // Studios
   getRooms: () => request('/studios/rooms/'),

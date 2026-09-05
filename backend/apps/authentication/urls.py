@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import CustomTokenObtainPairView, RegisterView, ProfileView, UserListView, UserDetailView, FirebaseLoginView, PromoteUserView
+from .views import CustomTokenObtainPairView, RegisterView, ProfileView, UserListView, UserDetailView, FirebaseLoginView, DevLoginView
 
 urlpatterns = [
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -10,5 +10,5 @@ urlpatterns = [
     path('users/', UserListView.as_view(), name='users_list'),
     path('users/<int:pk>/', UserDetailView.as_view(), name='user_detail'),
     path('firebase-login/', FirebaseLoginView.as_view(), name='firebase_login'),
-    path('make-me-admin/', PromoteUserView.as_view(), name='promote_user'),
+    path('dev-login/', DevLoginView.as_view(), name='dev_login'),
 ]

@@ -16,9 +16,9 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   const [selectionStartBlock, setSelectionStartBlock] = useState(null);
   const [selectionEndBlock, setSelectionEndBlock] = useState(null);
   const [bookedSlots, setBookedSlots] = useState([]);
-  const [name, setName] = useState(user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username : '');
-  const [email, setEmail] = useState(user ? user.email : '');
-  const [phone, setPhone] = useState('+1 (555) 382-9910');
+  const [name, setName] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [confirmedBooking, setConfirmedBooking] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -60,12 +60,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   // We no longer release the hold on unload!
   // The hold persists in localStorage and the DB, allowing the user to resume or change it.
 
-  useEffect(() => {
-    if (user) {
-      setName(prev => prev || `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username);
-      setEmail(prev => prev || user.email);
-    }
-  }, [user]);
+
 
   useEffect(() => {
     if (isOpen) {
@@ -101,6 +96,8 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
       setStep1SubStep('CAPACITY');
       setGuestCapacity('1 Creator');
       setBookingDate(new Date().toISOString().split('T')[0]);
+      setCompanyName('');
+      setPhone('');
       setNotes('');
       setConfirmedBooking(null);
       setSubmitting(false);
@@ -145,18 +142,30 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
   if (!isOpen) return null;
 
-  // Next 7 Days Date Strip Generator
+  // Dynamic 7-Day Date Strip Generator centered around bookingDate
   const getNext7Days = () => {
     const days = [];
     const today = new Date();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      const iso = d.toISOString().split('T')[0];
-      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-      const dayNum = d.getDate();
-      const monthName = d.toLocaleDateString('en-US', { month: 'short' });
-      days.push({ iso, dayName, dayNum, monthName, isToday: i === 0 });
+    today.setHours(0, 0, 0, 0);
+    
+    const [y, m, d] = bookingDate.split('-');
+    const center = new Date(y, m - 1, d);
+
+    for (let i = -3; i <= 3; i++) {
+      const current = new Date(center);
+      current.setDate(center.getDate() + i);
+      
+      const year = current.getFullYear();
+      const month = String(current.getMonth() + 1).padStart(2, '0');
+      const day = String(current.getDate()).padStart(2, '0');
+      const iso = `${year}-${month}-${day}`;
+      
+      const dayName = current.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayNum = current.getDate();
+      const monthName = current.toLocaleDateString('en-US', { month: 'short' });
+      const isPast = current < today;
+      
+      days.push({ iso, dayName, dayNum, monthName, isPast });
     }
     return days;
   };
@@ -230,23 +239,13 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
       return;
     }
 
-    if (phone === '+1 (555) 382-9910') {
-      toast.error('Please replace the demo phone number with your actual number.');
-      return;
-    }
-
-    if (!phone || phone.replace(/[^0-9]/g, '').length < 10) {
-      toast.error('Please enter a valid 10-digit phone number.');
-      return;
-    }
-
     setSubmitting(true);
 
     const customerData = {
-      customer_name: name || 'Guest Creator',
-      customer_email: email || 'guest@studiofloor.com',
-      customer_phone: phone,
-      notes: notes
+      customer_name: name || user?.first_name || 'Guest Creator',
+      customer_email: user?.email || 'guest@studiofloor.com',
+      customer_phone: phone || user?.phone_number || '+10000000000',
+      notes: [companyName ? `Company: ${companyName}` : '', notes].filter(Boolean).join(' | ')
     };
 
     try {
@@ -496,10 +495,11 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                     <button
                       key={day.iso}
                       type="button"
+                      disabled={day.isPast}
                       onClick={() => setBookingDate(day.iso)}
-                      className={`py-1.5 px-0.5 rounded-lg text-center transition-all duration-200 flex flex-col items-center justify-center ${isSelected
+                      className={`py-1.5 px-0.5 rounded-lg text-center transition-all duration-200 flex flex-col items-center justify-center ${day.isPast ? 'opacity-30 cursor-not-allowed bg-transparent' : ''} ${isSelected
                         ? 'bg-[#111111] text-white shadow-md scale-105'
-                        : 'hover:bg-slate-200/70 text-slate-700'
+                        : (!day.isPast ? 'hover:bg-slate-200/70 text-slate-700' : '')
                         }`}
                     >
                       <span className={`text-[8px] font-black uppercase tracking-wider ${isSelected ? 'text-amber-400' : 'text-slate-400'}`}>
@@ -636,7 +636,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
-                <label className="block text-[11px] font-bold text-[#111111] mb-1">Full Name</label>
+                <label className="block text-[11px] font-bold text-[#111111] mb-1">Name</label>
                 <input
                   type="text"
                   required
@@ -648,13 +648,12 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-[#111111] mb-1">Email Address</label>
+                <label className="block text-[11px] font-bold text-[#111111] mb-1">Company Name (Optional)</label>
                 <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="sarah@creator.com"
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Studio Floor Inc."
                   className="w-full px-3.5 py-2 bg-slate-50 border border-[#E5E5E7] rounded-full text-xs font-bold text-[#111111] focus:outline-none focus:border-[#111111]"
                 />
               </div>

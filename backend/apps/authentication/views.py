@@ -98,15 +98,50 @@ class FirebaseLoginView(APIView):
             'user': user_serializer.data
         })
 
+from django.conf import settings
 
-class PromoteUserView(APIView):
+class DevLoginView(APIView):
     permission_classes = (permissions.AllowAny,)
-    def get(self, request):
-        user = User.objects.filter(phone_number='+919400850450').first()
-        if user:
-            user.role = User.Role.ADMIN
-            user.is_staff = True
-            user.is_superuser = True
+    
+    def post(self, request):
+        if not settings.DEBUG:
+            return Response({'error': 'Dev login is not allowed in production.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        phone_number = request.data.get('phone_number')
+        full_name = request.data.get('full_name')
+        
+        if not phone_number:
+            return Response({'error': 'Missing phone number'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Find or create user
+        user = User.objects.filter(phone_number=phone_number).first()
+        
+        if not user:
+            name_parts = (full_name or 'Dev User').strip().split(' ')
+            first_name = name_parts[0] or 'Dev'
+            last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
+            
+            clean_phone = ''.join(filter(str.isdigit, phone_number))
+            email = f"{clean_phone}@studiofloor.com"
+            username = clean_phone
+            password = secrets.token_urlsafe(16)
+            
+            user = User(
+                first_name=first_name,
+                last_name=last_name,
+                username=username,
+                email=email,
+                phone_number=phone_number,
+                role=User.Role.CUSTOMER
+            )
+            user.set_password(password)
             user.save()
-            return Response({'message': 'Success! +919400850450 is now admin.'})
-        return Response({'message': 'User not found. Register first with +919400850450'}, status=404)
+            
+        refresh = RefreshToken.for_user(user)
+        user_serializer = UserSerializer(user)
+        
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': user_serializer.data
+        })
