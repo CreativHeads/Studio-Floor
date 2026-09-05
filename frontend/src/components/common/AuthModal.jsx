@@ -171,6 +171,20 @@ export default function AuthModal({ isOpen, onClose }) {
               <>{!confirmationResult ? 'Send OTP' : 'Verify & Login'} <ArrowRight className="w-4 h-4" /></>
             )}
           </button>
+          
+          {confirmationResult && (
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmationResult(null);
+                setOtpCode('');
+              }}
+              disabled={submitting || loading}
+              className="w-full py-2.5 mt-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all disabled:opacity-50"
+            >
+              Change Number / Resend OTP
+            </button>
+          )}
         </form>
       </div>
     </div>
