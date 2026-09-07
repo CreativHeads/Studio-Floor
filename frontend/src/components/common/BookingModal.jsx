@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, CheckCircle2, ShieldCheck, Sparkles, ChevronRight, ChevronLeft, QrCode, CreditCard, Sun, Sunset, Moon } from 'lucide-react';
+import { X, Calendar, Clock, CheckCircle2, ShieldCheck, Sparkles, ChevronRight, ChevronLeft, QrCode, CreditCard, Sun, Sunset, Moon, Loader2, RefreshCw } from 'lucide-react';
 import { MOCK_ROOMS, api, API_BASE } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -9,6 +9,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   const [step, setStep] = useState(1);
   const [step1SubStep, setStep1SubStep] = useState('CAPACITY'); // 'CAPACITY' | 'STUDIO'
   const [rooms, setRooms] = useState([]);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
 
   const [selectedStudio, setSelectedStudio] = useState(initialStudio || null);
   const [guestCapacity, setGuestCapacity] = useState('1 Creator');
@@ -16,9 +17,35 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   const [selectionStartBlock, setSelectionStartBlock] = useState(null);
   const [selectionEndBlock, setSelectionEndBlock] = useState(null);
   const [bookedSlots, setBookedSlots] = useState([]);
-  const [name, setName] = useState('');
+  const [name, setName] = useState(() => {
+    if (user) return `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    return '';
+  });
   const [companyName, setCompanyName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
+  const [phone, setPhone] = useState(() => {
+    let p = user?.phone_number || '';
+    if (p.startsWith('+91')) return p.substring(3);
+    if (p.startsWith('+1')) return p.substring(2);
+    if (p.startsWith('+44')) return p.substring(3);
+    if (p.startsWith('+61')) return p.substring(3);
+    return p;
+  });
+
+  // Keep name and phone in sync if user logs in after modal opens
+  useEffect(() => {
+    if (user) {
+      if (!name) setName(`${user.first_name || ''} ${user.last_name || ''}`.trim());
+      if (!phone) {
+        let p = user.phone_number || '';
+        if (p.startsWith('+91')) { setCountryCode('+91'); setPhone(p.substring(3)); }
+        else if (p.startsWith('+1')) { setCountryCode('+1'); setPhone(p.substring(2)); }
+        else if (p.startsWith('+44')) { setCountryCode('+44'); setPhone(p.substring(3)); }
+        else if (p.startsWith('+61')) { setCountryCode('+61'); setPhone(p.substring(3)); }
+        else setPhone(p);
+      }
+    }
+  }, [user]);
   const [notes, setNotes] = useState('');
   const [confirmedBooking, setConfirmedBooking] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -62,12 +89,19 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
 
 
+  const fetchRooms = () => {
+    setIsLoadingRooms(true);
+    api.getRooms().then(data => {
+      setRooms(data);
+      if (!initialStudio && data.length > 0) setSelectedStudio(data[0]);
+    }).catch(console.error).finally(() => {
+      setIsLoadingRooms(false);
+    });
+  };
+
   useEffect(() => {
     if (isOpen) {
-      api.getRooms().then(data => {
-        setRooms(data);
-        if (!initialStudio && data.length > 0) setSelectedStudio(data[0]);
-      }).catch(console.error);
+      fetchRooms();
     }
   }, [isOpen, initialStudio]);
 
@@ -97,14 +131,26 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
       setGuestCapacity('1 Creator');
       setBookingDate(new Date().toISOString().split('T')[0]);
       setCompanyName('');
-      setPhone('');
+      if (user) {
+        setName(`${user.first_name || ''} ${user.last_name || ''}`.trim());
+        let p = user.phone_number || '';
+        if (p.startsWith('+91')) { setCountryCode('+91'); setPhone(p.substring(3)); }
+        else if (p.startsWith('+1')) { setCountryCode('+1'); setPhone(p.substring(2)); }
+        else if (p.startsWith('+44')) { setCountryCode('+44'); setPhone(p.substring(3)); }
+        else if (p.startsWith('+61')) { setCountryCode('+61'); setPhone(p.substring(3)); }
+        else setPhone(p);
+      } else {
+        setName('');
+        setPhone('');
+        setCountryCode('+91');
+      }
       setNotes('');
       setConfirmedBooking(null);
       setSubmitting(false);
       setSelectionStartBlock(null);
       setSelectionEndBlock(null);
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
 
   useEffect(() => {
     if (isOpen && initialData) {
@@ -241,10 +287,11 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
     setSubmitting(true);
 
+    const fullPhone = phone ? `${countryCode}${phone}` : (user?.phone_number || '+10000000000');
     const customerData = {
       customer_name: name || user?.first_name || 'Guest Creator',
       customer_email: user?.email || 'guest@studiofloor.com',
-      customer_phone: phone || user?.phone_number || '+10000000000',
+      customer_phone: fullPhone,
       notes: [companyName ? `Company: ${companyName}` : '', notes].filter(Boolean).join(' | ')
     };
 
@@ -397,11 +444,36 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
             {/* Studio Cards Visual Image Grid */}
             <div className="grid grid-cols-2 gap-3 mb-5">
-              {filteredRooms.length === 0 ? (
-                <div className="col-span-full py-8 text-center bg-slate-50 border border-slate-200 border-dashed rounded-2xl">
-                  <p className="text-xs font-bold text-slate-500 mb-1">No studios available for this capacity.</p>
-                  <p className="text-[10px] text-slate-400">Total rooms loaded: {rooms.length}.</p>
-                  <p className="text-[10px] text-slate-400">Please go back and choose a smaller capacity, or contact support.</p>
+              {isLoadingRooms ? (
+                <div className="col-span-full py-12 flex flex-col items-center justify-center bg-[#f4f4f5] border border-[#E5E5E7] rounded-2xl relative overflow-hidden">
+                  {/* Animated Searching GIF */}
+                  <div className="relative flex items-center justify-center mb-6">
+                    <img 
+                      src="/search.gif" 
+                      alt="Searching..." 
+                      className="w-24 h-24" 
+                    />
+                  </div>
+                  <p className="text-sm font-extrabold text-[#111111] mb-1">Loading Studio Spaces...</p>
+                  <p className="text-[11px] text-slate-500 text-center px-4">Please wait a few seconds</p>
+                </div>
+              ) : filteredRooms.length === 0 ? (
+                <div className="col-span-full py-12 flex flex-col items-center justify-center bg-[#f4f4f5] border border-[#E5E5E7] rounded-2xl relative overflow-hidden">
+                  {/* Animated Searching GIF */}
+                  <div className="relative flex items-center justify-center mb-6">
+                    <img 
+                      src="/search.gif" 
+                      alt="Searching..." 
+                      className="w-24 h-24" 
+                    />
+                  </div>
+                  
+                  <p className="text-sm font-extrabold text-[#111111] mb-1">Looking for the perfect space...</p>
+                  <p className="text-[11px] text-slate-500 mb-5 text-center px-4">Please wait a few seconds while we check our studio availability.</p>
+                  
+                  <button onClick={fetchRooms} className="relative z-10 flex items-center gap-1.5 px-5 py-2.5 bg-[#111111] hover:bg-[#222222] rounded-full text-xs font-bold text-white shadow-md transition-all active:scale-95 group">
+                    <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" /> Refresh Search
+                  </button>
                 </div>
               ) : (
                 filteredRooms.map((room) => {
@@ -661,14 +733,27 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
             <div>
               <label className="block text-[11px] font-bold text-[#111111] mb-1">Phone Number</label>
-              <input
-                type="tel"
-                required
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1 (555) 382-9910"
-                className="w-full px-3.5 py-2 bg-slate-50 border border-[#E5E5E7] rounded-full text-xs font-bold text-[#111111] focus:outline-none focus:border-[#111111]"
-              />
+              <div className="flex gap-2">
+                <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="px-3 py-2 bg-slate-50 border border-[#E5E5E7] rounded-full text-xs font-bold text-[#111111] focus:outline-none focus:border-[#111111] w-[90px] shrink-0 cursor-pointer appearance-none"
+                  style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23111111%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right .7rem top 50%', backgroundSize: '.65rem auto' }}
+                >
+                  <option value="+91">+91 (IN)</option>
+                  <option value="+1">+1 (US)</option>
+                  <option value="+44">+44 (UK)</option>
+                  <option value="+61">+61 (AU)</option>
+                </select>
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="90616 64755"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-[#E5E5E7] rounded-full text-xs font-bold text-[#111111] focus:outline-none focus:border-[#111111]"
+                />
+              </div>
             </div>
 
             <div>
