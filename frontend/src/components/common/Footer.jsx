@@ -1,5 +1,5 @@
 import React from 'react';
-import { Radio, ShieldCheck, Headphones, MapPin, Mail, Phone } from 'lucide-react';
+import { Radio, ShieldCheck, Mic, MapPin, Mail, Phone } from 'lucide-react';
 
 export default function Footer({ currentView, setCurrentView }) {
   if (currentView === 'admin') {
@@ -10,11 +10,7 @@ export default function Footer({ currentView, setCurrentView }) {
             <Radio className="w-4 h-4 text-slate-400" />
             <span className="text-xs font-bold text-slate-600">Studio Floor Admin</span>
           </div>
-          <p className="text-[10px] font-medium">© {new Date().getFullYear()} Studio Floor Inc. v2.4.1 (Secured Session)</p>
-          <div className="flex gap-4 text-[10px] font-medium">
-            <a href="#" className="hover:text-slate-800 transition-colors">Documentation</a>
-            <a href="#" className="hover:text-slate-800 transition-colors">Support Portal</a>
-          </div>
+          <p className="text-[10px] font-medium">© {new Date().getFullYear()} Studio Floor</p>
         </div>
       </footer>
     );
@@ -24,7 +20,7 @@ export default function Footer({ currentView, setCurrentView }) {
     <footer className="bg-[#111111] text-slate-400 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-16">
-          
+
           {/* Brand info */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3 mb-6">
@@ -43,19 +39,19 @@ export default function Footer({ currentView, setCurrentView }) {
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> 24/7 Security
               </span>
               <span className="flex items-center gap-1 bg-white/5 text-slate-300 px-3 py-1.5 rounded-full border border-white/10 font-bold">
-                <Headphones className="w-3.5 h-3.5 text-amber-400" /> Sound Engineers
+                <Mic className="w-3.5 h-3.5 text-amber-400" /> Premium Gear
               </span>
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">Studios</h4>
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">Quick Links</h4>
             <ul className="space-y-2.5 text-sm font-medium">
-              <li><a href="#studios" className="text-slate-400 hover:text-white transition-colors">All Studios</a></li>
+              <li><button onClick={() => { setCurrentView?.('public'); window.scrollTo(0, 0); }} className="text-slate-400 hover:text-white transition-colors">Book a Studio</button></li>
+              <li><button onClick={() => { setCurrentView?.('my-passes'); window.scrollTo(0, 0); }} className="text-slate-400 hover:text-white transition-colors">My Passes</button></li>
               <li><a href="#equipment" className="text-slate-400 hover:text-white transition-colors">Equipment Specs</a></li>
               <li><a href="#testimonials" className="text-slate-400 hover:text-white transition-colors">Creator Reviews</a></li>
-              <li><a href="#pricing" className="text-slate-400 hover:text-white transition-colors">Pricing & Rates</a></li>
             </ul>
           </div>
 
@@ -66,8 +62,7 @@ export default function Footer({ currentView, setCurrentView }) {
               <li><a href="#faq" className="text-slate-400 hover:text-white transition-colors">FAQ</a></li>
               <li><a href="#contact" className="text-slate-400 hover:text-white transition-colors">Contact Us</a></li>
               <li><button onClick={() => { setCurrentView?.('blogs'); window.scrollTo(0, 0); }} className="text-slate-400 hover:text-white transition-colors">Blog</button></li>
-              <li><a href="#" className="text-slate-400 hover:text-white transition-colors">Cancellation Policy</a></li>
-              <li><a href="#" className="text-slate-400 hover:text-white transition-colors">Help Center</a></li>
+              <li><a href="#contact" className="text-slate-400 hover:text-white transition-colors">Help Center</a></li>
             </ul>
           </div>
 
@@ -77,7 +72,7 @@ export default function Footer({ currentView, setCurrentView }) {
             <div className="space-y-3 text-sm font-medium">
               <p className="flex items-start gap-2 text-slate-400">
                 <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span>100 Media Boulevard, Suite 400<br/>San Francisco, CA 94105</span>
+                <span>100 Media Boulevard, Suite 400<br />San Francisco, CA 94105</span>
               </p>
               <p className="flex items-center gap-2 text-slate-400">
                 <Mail className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -95,9 +90,9 @@ export default function Footer({ currentView, setCurrentView }) {
         <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
           <p>© {new Date().getFullYear()} Studio Floor Inc. All rights reserved.</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-slate-300 transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-slate-300 transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-slate-300 transition-colors">Security Overview</a>
+            <button onClick={() => { setCurrentView?.('privacy'); window.scrollTo(0, 0); }} className="hover:text-slate-300 transition-colors">Privacy Policy</button>
+            <button onClick={() => { setCurrentView?.('terms'); window.scrollTo(0, 0); }} className="hover:text-slate-300 transition-colors">Terms of Service</button>
+            <button onClick={() => { setCurrentView?.('security'); window.scrollTo(0, 0); }} className="hover:text-slate-300 transition-colors">Security Overview</button>
           </div>
         </div>
       </div>

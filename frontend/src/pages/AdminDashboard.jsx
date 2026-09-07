@@ -10,7 +10,7 @@ import { api, MOCK_ROOMS } from '../services/api';
 import FadeIn from '../components/common/FadeIn';
 import Pagination from '../components/common/Pagination';
 
-export default function AdminDashboard({ adminTab, setAdminTab }) {
+export default function AdminDashboard({ adminTab, setAdminTab, onOpenBooking }) {
   const [analytics, setAnalytics] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [usersList, setUsersList] = useState([]);
@@ -20,7 +20,12 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [capacityFilter, setCapacityFilter] = useState('ALL');
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState('ALL');
+  const [blogSearchTerm, setBlogSearchTerm] = useState('');
+  const [blogStatusFilter, setBlogStatusFilter] = useState('ALL');
   const [selectedBookingForDetails, setSelectedBookingForDetails] = useState(null);
 
   const formatTimeAMPM = (timeStr) => {
@@ -90,8 +95,20 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
 
     api.getBookings()
       .then(res => {
+        const now = new Date();
+        const processedBookings = res.map(b => {
+          if (b.status === 'HOLD' && b.created_at) {
+            const createdTime = new Date(b.created_at);
+            const tenMinutesInMs = 10 * 60 * 1000;
+            if ((now - createdTime) > tenMinutesInMs) {
+              b.status = 'CANCELLED';
+              api.updateBookingStatus(b.id, 'CANCELLED').catch(() => {});
+            }
+          }
+          return b;
+        });
         // Filter out temporary holds that were cancelled/released
-        const validBookings = res.filter(b => !(b.status === 'CANCELLED' && b.customer_email === 'hold@pending.com'));
+        const validBookings = processedBookings.filter(b => !(b.status === 'CANCELLED' && b.customer_email === 'hold@pending.com'));
         setBookings(validBookings);
       })
       .catch((err) => {
@@ -118,6 +135,46 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
       await api.updateBookingStatus(id, newStatus);
     } catch (e) { }
     setBookings(bookings.map(b => b.id === id ? { ...b, status: newStatus } : b));
+  };
+
+  const handleDeleteBooking = async (id) => {
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm font-semibold text-[#111111]">Are you sure you want to delete this booking? This action cannot be undone.</p>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              try {
+                await api.deleteBooking(id);
+                setBookings(prev => prev.filter(b => b.id !== id));
+                toast.success("Booking deleted successfully.");
+              } catch (e) {
+                toast.error("Failed to delete booking.");
+              }
+            }}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-colors"
+          >
+            Delete Booking
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity,
+      style: {
+        background: '#fff',
+        color: '#111',
+        border: '1px solid #e2e8f0',
+        padding: '16px',
+        maxWidth: '400px',
+      }
+    });
   };
 
   const openCreateModal = () => {
@@ -232,15 +289,43 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
   };
 
   const handleDeleteUser = async (userId) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      try {
-        await api.deleteUser(userId);
-        setUsersList(usersList.filter(u => u.id !== userId));
-        toast.success("User deleted successfully.");
-      } catch (e) {
-        toast.error("Failed to delete user.");
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm font-semibold text-[#111111]">Are you sure you want to delete this user? This action cannot be undone.</p>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              try {
+                await api.deleteUser(userId);
+                setUsersList(prev => prev.filter(u => u.id !== userId));
+                toast.success("User deleted successfully.");
+              } catch (e) {
+                toast.error("Failed to delete user.");
+              }
+            }}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-colors"
+          >
+            Delete User
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity,
+      style: {
+        background: '#fff',
+        color: '#111',
+        border: '1px solid #e2e8f0',
+        padding: '16px',
+        maxWidth: '400px',
       }
-    }
+    });
   };
 
   const openCreateBlogModal = () => {
@@ -278,21 +363,50 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
   };
 
   const handleDeleteBlog = async (id) => {
-    if (window.confirm("Are you sure you want to delete this blog?")) {
-      try {
-        await api.deleteBlog(id);
-        setBlogs(blogs.filter(b => b.id !== id));
-        toast.success("Blog deleted successfully.");
-      } catch (e) {
-        toast.error("Failed to delete blog.");
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm font-semibold text-[#111111]">Are you sure you want to delete this blog? This action cannot be undone.</p>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              try {
+                await api.deleteBlog(id);
+                setBlogs(prev => prev.filter(b => b.id !== id));
+                toast.success("Blog deleted successfully.");
+              } catch (e) {
+                toast.error("Failed to delete blog.");
+              }
+            }}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-colors"
+          >
+            Delete Blog
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity,
+      style: {
+        background: '#fff',
+        color: '#111',
+        border: '1px solid #e2e8f0',
+        padding: '16px',
+        maxWidth: '400px',
       }
-    }
+    });
   };
 
   const filteredBookings = bookings.filter(b =>
-    b.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (statusFilter === 'ALL' || b.status === statusFilter) &&
+    (b.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     b.booking_reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.customer_email.toLowerCase().includes(searchTerm.toLowerCase())
+    b.customer_email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Pagination Derivations
@@ -301,9 +415,26 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
   const filteredRooms = rooms.filter(room => capacityFilter === 'ALL' || room.max_capacity === parseInt(capacityFilter));
   const paginatedRooms = filteredRooms.slice((studiosPage - 1) * gridItemsPerPage, studiosPage * gridItemsPerPage);
 
-  const paginatedUsers = usersList.slice((usersPage - 1) * tableItemsPerPage, usersPage * tableItemsPerPage);
+  const filteredUsers = usersList.filter(u => {
+    const roleMatch = userRoleFilter === 'ALL' || (u.role || 'CUSTOMER') === userRoleFilter;
+    const searchLower = userSearchTerm.toLowerCase();
+    const searchMatch = !userSearchTerm || 
+      (u.first_name && u.first_name.toLowerCase().includes(searchLower)) ||
+      (u.username && u.username.toLowerCase().includes(searchLower)) ||
+      (u.email && u.email.toLowerCase().includes(searchLower)) ||
+      (u.phone_number && u.phone_number.includes(userSearchTerm));
+    return roleMatch && searchMatch;
+  });
+
+  const paginatedUsers = filteredUsers.slice((usersPage - 1) * tableItemsPerPage, usersPage * tableItemsPerPage);
   
-  const paginatedBlogs = blogs.slice((blogsPage - 1) * tableItemsPerPage, blogsPage * tableItemsPerPage);
+  const filteredBlogs = blogs.filter(b => {
+    const statusMatch = blogStatusFilter === 'ALL' || (blogStatusFilter === 'PUBLISHED' ? b.published : !b.published);
+    const searchMatch = !blogSearchTerm || b.title.toLowerCase().includes(blogSearchTerm.toLowerCase());
+    return statusMatch && searchMatch;
+  });
+
+  const paginatedBlogs = filteredBlogs.slice((blogsPage - 1) * tableItemsPerPage, blogsPage * tableItemsPerPage);
 
   return (
     <div className="min-h-screen bg-[#F3F3F5] text-slate-900 p-4 sm:p-6 lg:p-8 pb-24 sm:pb-28 lg:pb-8">
@@ -341,6 +472,7 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                   </div>
                   <div className="text-2xl font-black text-slate-900 mb-1">
                     {bookings.reduce((total, b) => {
+                      if (b.status !== 'CONFIRMED' && b.status !== 'COMPLETED') return total;
                       if (!b.start_time || !b.end_time) return total;
                       const [sh, sm] = b.start_time.split(':').map(Number);
                       const [eh, em] = b.end_time.split(':').map(Number);
@@ -360,7 +492,7 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-bold text-slate-500">Total Reservations</span>
                   </div>
-                  <div className="text-2xl font-black text-slate-900 mb-1">{bookings.length}</div>
+                  <div className="text-2xl font-black text-slate-900 mb-1">{bookings.filter(b => b.status === 'CONFIRMED' || b.status === 'COMPLETED').length}</div>
                   <div className="text-[10px] font-bold text-amber-600">Confirmed sessions</div>
                 </div>
               </div>
@@ -483,10 +615,25 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                         }
                       });
                       const max = Math.max(...buckets, 1);
-                      return buckets.map(count => (count / max) * 10);
-                    })().map((val, i) => (
-                      <div key={i} className="flex-1 bg-sky-100 rounded-t-sm hover:bg-sky-200 transition-colors" style={{ height: `${val > 0 ? val * 10 : 2}%` }}></div>
-                    ))}
+                      return buckets.map((count, i) => ({ val: (count / max) * 10, count, index: i }));
+                    })().map(({val, count, index}) => {
+                      const startHour = 8 + (index * 2);
+                      const timeLabel = `${startHour.toString().padStart(2, '0')}:00 - ${(startHour + 2).toString().padStart(2, '0')}:00`;
+                      return (
+                        <div 
+                          key={index} 
+                          className="flex-1 bg-sky-100 rounded-t-sm hover:bg-sky-200 transition-colors group relative cursor-pointer" 
+                          style={{ height: `${val > 0 ? val * 10 : 2}%` }}
+                        >
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-10">
+                            <div className="bg-slate-800 text-white text-[10px] py-1 px-2 rounded font-bold whitespace-nowrap shadow-lg">
+                              {timeLabel} <span className="text-slate-400 font-normal">({count})</span>
+                            </div>
+                            <div className="w-0 h-0 border-l-[4px] border-l-transparent border-t-[4px] border-t-slate-800 border-r-[4px] border-r-transparent mx-auto"></div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                   <div className="flex justify-between text-[9px] font-bold text-slate-400 mt-1 uppercase">
                     <span>Morning</span>
@@ -503,16 +650,43 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-              <h3 className="text-lg font-bold text-slate-900">Reservation Records</h3>
-              <div className="relative w-full sm:w-64">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                <input
-                  type="text"
-                  placeholder="Search ref or customer..."
-                  value={searchTerm}
-                  onChange={(e) => { setSearchTerm(e.target.value); setBookingsPage(1); }}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
-                />
+              <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+                <h3 className="text-lg font-bold text-slate-900">Reservation Records</h3>
+                <button
+                  className="sm:hidden px-4 py-2 bg-[#111111] hover:bg-[#222222] text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                  onClick={() => onOpenBooking?.()}
+                >
+                  + Book
+                </button>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => { setStatusFilter(e.target.value); setBookingsPage(1); }}
+                  className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#111111] cursor-pointer w-full sm:w-auto"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="CONFIRMED">Confirmed</option>
+                  <option value="HOLD">Hold</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="CANCELLED">Cancelled</option>
+                </select>
+                <div className="relative w-full sm:w-64">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    placeholder="Search ref or customer..."
+                    value={searchTerm}
+                    onChange={(e) => { setSearchTerm(e.target.value); setBookingsPage(1); }}
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
+                  />
+                </div>
+                <button
+                  className="hidden sm:block px-4 py-2 bg-[#111111] hover:bg-[#222222] text-white rounded-xl text-xs font-bold transition-all shadow-sm whitespace-nowrap"
+                  onClick={() => onOpenBooking?.()}
+                >
+                  + Create Booking
+                </button>
               </div>
             </div>
 
@@ -565,16 +739,28 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <select
-                            value={b.status}
-                            onChange={(e) => handleUpdateStatus(b.id, e.target.value)}
-                            className="bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700 px-2 py-1 focus:outline-none"
-                          >
-                            <option value="CONFIRMED">CONFIRMED</option>
-                            <option value="HOLD">HOLD</option>
-                            <option value="COMPLETED">COMPLETED</option>
-                            <option value="CANCELLED">CANCELLED</option>
-                          </select>
+                          <div className="flex items-center justify-end gap-2">
+                            <select
+                              value={b.status}
+                              onChange={(e) => handleUpdateStatus(b.id, e.target.value)}
+                              className="bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700 px-2 py-1 focus:outline-none"
+                            >
+                              <option value="CONFIRMED">CONFIRMED</option>
+                              <option value="HOLD">HOLD</option>
+                              <option value="COMPLETED">COMPLETED</option>
+                              <option value="CANCELLED">CANCELLED</option>
+                            </select>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteBooking(b.id);
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete Booking"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -847,7 +1033,30 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
 
             {/* Users List Table */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Registered Users</h3>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <h3 className="text-lg font-bold text-slate-900">Registered Users</h3>
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                  <select
+                    value={userRoleFilter}
+                    onChange={(e) => { setUserRoleFilter(e.target.value); setUsersPage(1); }}
+                    className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#111111] cursor-pointer w-full sm:w-auto"
+                  >
+                    <option value="ALL">All Roles</option>
+                    <option value="CUSTOMER">Customer</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
+                  <div className="relative w-full sm:w-64">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <input
+                      type="text"
+                      placeholder="Search name, email or phone..."
+                      value={userSearchTerm}
+                      onChange={(e) => { setUserSearchTerm(e.target.value); setUsersPage(1); }}
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
+                    />
+                  </div>
+                </div>
+              </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
@@ -861,7 +1070,12 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-mono">
-                    {usersList.map(u => (
+                    {paginatedUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="py-12 text-center text-slate-500 font-medium">No users found matching your search.</td>
+                      </tr>
+                    ) : (
+                    paginatedUsers.map(u => (
                       <tr key={u.id} className="hover:bg-slate-50 transition-colors">
                         <td className="py-3 px-4 text-slate-800 font-bold">{u.first_name || u.username}</td>
                         <td className="py-3 px-4 text-slate-500">{u.phone_number || (u.email.includes('@studiofloor.com') ? '+' + u.email.split('@')[0] : u.email)}</td>
@@ -883,10 +1097,16 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    )))}
                   </tbody>
                 </table>
               </div>
+              <Pagination 
+                currentPage={usersPage} 
+                totalItems={filteredUsers.length} 
+                itemsPerPage={tableItemsPerPage} 
+                onPageChange={setUsersPage} 
+              />
             </div>
             
             {/* Edit User Modal */}
@@ -941,14 +1161,43 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
         {adminTab === 'blogs' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-slate-900">Platform Blogs</h3>
-                <button
-                  className="px-4 py-2 bg-[#111111] hover:bg-[#222222] text-white rounded-xl text-xs font-bold transition-all shadow-sm"
-                  onClick={openCreateBlogModal}
-                >
-                  + Create New Blog
-                </button>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+                  <h3 className="text-lg font-bold text-slate-900">Platform Blogs</h3>
+                  <button
+                    className="sm:hidden px-4 py-2 bg-[#111111] hover:bg-[#222222] text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                    onClick={openCreateBlogModal}
+                  >
+                    + New
+                  </button>
+                </div>
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                  <select
+                    value={blogStatusFilter}
+                    onChange={(e) => { setBlogStatusFilter(e.target.value); setBlogsPage(1); }}
+                    className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#111111] cursor-pointer w-full sm:w-auto"
+                  >
+                    <option value="ALL">All Statuses</option>
+                    <option value="PUBLISHED">Published</option>
+                    <option value="DRAFT">Draft</option>
+                  </select>
+                  <div className="relative w-full sm:w-64">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <input
+                      type="text"
+                      placeholder="Search title..."
+                      value={blogSearchTerm}
+                      onChange={(e) => { setBlogSearchTerm(e.target.value); setBlogsPage(1); }}
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
+                    />
+                  </div>
+                  <button
+                    className="hidden sm:block px-4 py-2 bg-[#111111] hover:bg-[#222222] text-white rounded-xl text-xs font-bold transition-all shadow-sm whitespace-nowrap"
+                    onClick={openCreateBlogModal}
+                  >
+                    + Create New Blog
+                  </button>
+                </div>
               </div>
               
               {blogs.length === 0 ? (
@@ -973,7 +1222,12 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-mono">
-                      {paginatedBlogs.map(blog => (
+                      {paginatedBlogs.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" className="py-12 text-center text-slate-500 font-medium">No blogs found matching your search.</td>
+                        </tr>
+                      ) : (
+                      paginatedBlogs.map(blog => (
                         <tr key={blog.id} className="hover:bg-slate-50 transition-colors">
                           <td className="py-3 px-4 text-slate-800 font-bold">{blog.title}</td>
                           <td className="py-3 px-4">
@@ -993,12 +1247,12 @@ export default function AdminDashboard({ adminTab, setAdminTab }) {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      )))}
                     </tbody>
                   </table>
                   <Pagination 
                     currentPage={blogsPage} 
-                    totalItems={blogs.length} 
+                    totalItems={filteredBlogs.length} 
                     itemsPerPage={tableItemsPerPage} 
                     onPageChange={setBlogsPage} 
                   />

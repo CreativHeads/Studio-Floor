@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function BookingModal({ isOpen, onClose, selectedStudio: initialStudio, onRequireAuth, initialData, initialOrderId }) {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [step, setStep] = useState(1);
   const [step1SubStep, setStep1SubStep] = useState('CAPACITY'); // 'CAPACITY' | 'STUDIO'
   const [rooms, setRooms] = useState([]);
@@ -296,6 +296,20 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
     };
 
     try {
+      if (isAdmin) {
+        // Admin skips payment completely
+        api.createBooking({ hold_id: holdId, ...customerData }).then(res => {
+          setConfirmedBooking(res);
+          setStep(4);
+          setSubmitting(false);
+          toast.success("Admin booking confirmed!");
+        }).catch(err => {
+          toast.error("Admin booking failed.");
+          setSubmitting(false);
+        });
+        return;
+      }
+
       // Create payment order
       const res = await api.createPaymentOrder(holdId, customerData);
 
@@ -683,7 +697,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                 disabled={submitting || !selectedSlot || selectedSlot.hours === 0}
                 className="w-2/3 py-3 bg-[#111111] hover:bg-[#222222] text-white font-bold text-xs uppercase tracking-wider rounded-full flex items-center justify-center gap-1.5 shadow-md transition-all disabled:opacity-40"
               >
-                <span>{submitting ? 'Holding Slot...' : 'Proceed to Checkout'}</span>
+                <span>{submitting ? 'Holding Slot...' : (isAdmin ? 'Finalize Details' : 'Proceed to Checkout')}</span>
                 {!submitting && <ChevronRight className="w-3.5 h-3.5" />}
               </button>
             </div>
@@ -796,7 +810,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                 disabled={submitting}
                 className="w-2/3 py-3 bg-[#111111] hover:bg-[#222222] text-white font-bold text-xs uppercase tracking-wider rounded-full flex items-center justify-center gap-1.5 shadow-md transition-all"
               >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> {submitting ? 'Processing...' : 'Pay ₹100 & Confirm'}
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> {submitting ? 'Processing...' : (isAdmin ? 'Confirm Booking' : 'Pay ₹100 & Confirm')}
               </button>
             </div>
           </form>

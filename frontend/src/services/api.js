@@ -113,6 +113,7 @@ export const api = {
 
   // Bookings
   getBookings: (email = '') => request(`/bookings/reservations/${email ? `?email=${email}` : ''}`),
+  deleteBooking: (id) => request(`/bookings/reservations/${id}/`, { method: 'DELETE' }),
   createBooking: (bookingData) => request('/bookings/reservations/', { method: 'POST', body: JSON.stringify(bookingData) }),
   holdSlot: (holdData) => request('/bookings/reservations/hold_slot/', { method: 'POST', body: JSON.stringify(holdData) }),
   cancelHold: (holdId) => request(`/bookings/reservations/${holdId}/release_hold/`, { method: 'POST' }),

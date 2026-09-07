@@ -11,7 +11,9 @@ const PublicWebsite = lazy(() => import('./pages/PublicWebsite'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const MyPassesPage = lazy(() => import('./pages/MyPassesPage'));
 const BlogPage = lazy(() => import('./pages/BlogPage'));
-
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const TermsPage = lazy(() => import('./pages/TermsPage'));
+const SecurityPage = lazy(() => import('./pages/SecurityPage'));
 function MainApp() {
   const { user, isAdmin } = useAuth();
   const [currentView, setCurrentView] = useState('public'); // 'public' | 'admin' | 'blogs'
@@ -85,11 +87,17 @@ function MainApp() {
         {currentView === 'public' ? (
           <PublicWebsite onOpenBooking={handleOpenBooking} />
         ) : currentView === 'admin' ? (
-          <AdminDashboard adminTab={adminTab} setAdminTab={setAdminTab} />
+          <AdminDashboard adminTab={adminTab} setAdminTab={setAdminTab} onOpenBooking={handleOpenBooking} />
         ) : currentView === 'my-passes' ? (
           <MyPassesPage />
         ) : currentView === 'blogs' ? (
           <BlogPage />
+        ) : currentView === 'privacy' ? (
+          <PrivacyPage />
+        ) : currentView === 'terms' ? (
+          <TermsPage />
+        ) : currentView === 'security' ? (
+          <SecurityPage />
         ) : null}
       </Suspense>
 
