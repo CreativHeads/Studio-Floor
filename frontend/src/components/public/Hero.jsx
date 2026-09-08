@@ -36,8 +36,28 @@ export default function Hero({ onOpenBooking }) {
         {/* Main Hero Card Container (Matching Reference Image 1) */}
         <div className="relative rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden min-h-[520px] lg:min-h-[580px] flex flex-col lg:flex-row items-center justify-between p-5 sm:p-12 shadow-neo-md border border-[#E5E5E7] gap-8 lg:gap-0">
 
-          {/* Background Studio Video */}
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          {/* Background Studio Video - Mobile (Hidden on Desktop) */}
+          <div className="absolute inset-0 z-0 overflow-hidden block md:hidden">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              poster="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=800&q=80"
+              className="w-full h-full object-cover scale-105"
+            >
+              <source src="/videos/hero-bg-mobile.mp4" type="video/mp4" />
+              {/* Fallback to desktop if mobile not found */}
+              <source src="/videos/hero-bg.mp4" type="video/mp4" />
+              <source src="https://videos.pexels.com/video-files/2022395/2022395-hd_1920_1080_30fps.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            {/* Gradient optimized for vertical mobile stacking: dark at the top for text, fading down */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/50 to-black/20" />
+          </div>
+
+          {/* Background Studio Video - Desktop (Hidden on Mobile) */}
+          <div className="absolute inset-0 z-0 overflow-hidden hidden md:block">
             <video
               autoPlay
               loop
@@ -55,29 +75,21 @@ export default function Hero({ onOpenBooking }) {
           </div>
 
           {/* Hero Left Content Text */}
-          <div className="relative z-10 max-w-xl text-center lg:text-left text-white space-y-5 lg:space-y-6 w-full mt-4 lg:mt-0">
+          <div className="relative z-10 max-w-xl text-center lg:text-left text-white space-y-5 lg:space-y-6 w-full pt-8 lg:pt-0 mt-4 lg:mt-0">
 
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-[10px] sm:text-xs font-bold text-white mx-auto lg:mx-0">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#111111]/80 backdrop-blur-md border border-white/10 shadow-lg text-[10px] sm:text-xs font-bold text-white mx-auto lg:mx-0">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>Studio Reservation Platform</span>
+              <span className="tracking-wide">Studio Reservation Platform</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight leading-[1.15]">
-              Where You Record <br /> Studio Quality <br /> Sound & Unforgettable Broadcasts!
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15] drop-shadow-lg">
+              Where You Record <br className="hidden lg:block" /> Studio Quality <br /> Sound & Broadcasts!
             </h1>
 
-            <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-normal max-w-lg mx-auto lg:mx-0">
+            <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-medium max-w-lg mx-auto lg:mx-0 drop-shadow-md">
               Book sound-isolated 4K presentation suites & acoustic podcast lounges with on-site engineers, teleprompters, and instant ISO file exports.
             </p>
 
-            <div className="pt-2 flex justify-center lg:justify-start">
-              <button
-                onClick={() => onOpenBooking(null)}
-                className="px-8 py-3.5 bg-[#111111] hover:bg-black text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-xl flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 w-full sm:w-auto"
-              >
-                <Sparkles className="w-4 h-4 text-amber-300" /> Book Session Now
-              </button>
-            </div>
           </div>
 
           {/* Floating Studio Reservation Card (Matching Reference Image 1) */}
