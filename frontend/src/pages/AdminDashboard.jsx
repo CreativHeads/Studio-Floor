@@ -441,17 +441,19 @@ export default function AdminDashboard({ adminTab, setAdminTab, onOpenBooking })
       <div className="max-w-7xl mx-auto space-y-8">
 
         {/* Admin Top Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/60">
+        <div className="flex flex-row items-center justify-between gap-4 pb-4 sm:pb-6 border-b border-slate-200/60">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111] tracking-tight">Studio Operations Dashboard</h1>
-            <p className="text-xs text-slate-500 mt-1 font-medium">Manage studio bookings, pricing tiers, time slots, and security audit trails.</p>
+            <h1 className="text-xl sm:text-3xl font-extrabold text-[#111111] tracking-tight leading-tight">Studio Operations Dashboard</h1>
+            <p className="hidden sm:block text-xs text-slate-500 mt-1 font-medium">Manage studio bookings, pricing tiers, time slots, and security audit trails.</p>
           </div>
 
           <button
             onClick={loadAdminData}
-            className="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition-all"
+            className="p-2.5 sm:px-4 sm:py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all flex-shrink-0"
+            title="Refresh Feed"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh Feed
+            <RefreshCw className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${loading ? 'animate-spin' : ''}`} /> 
+            <span className="hidden sm:inline">Refresh Feed</span>
           </button>
         </div>
 
@@ -459,55 +461,55 @@ export default function AdminDashboard({ adminTab, setAdminTab, onOpenBooking })
         {adminTab === 'dashboard' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h3 className="text-lg font-bold text-slate-900">Analytics Overview</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
 
               {/* Hours Booked */}
-              <div className="bg-white rounded-2xl p-6 border border-emerald-100 shadow-sm shadow-emerald-100/50 relative overflow-hidden group hover:shadow-md transition-all">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <Clock className="w-16 h-16 text-emerald-600" />
+              <div className="bg-white rounded-xl sm:rounded-2xl py-5 px-3 sm:p-6 border border-emerald-100 shadow-sm shadow-emerald-100/50 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Clock className="w-8 h-8 sm:w-16 sm:h-16 text-emerald-600" />
                 </div>
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-bold text-slate-500">Hours Booked</span>
+                <div className="relative z-10 flex flex-col h-full justify-center">
+                  <div className="flex items-center justify-between mb-2 sm:mb-4">
+                    <span className="text-[9px] sm:text-xs font-bold text-slate-500 leading-tight">Hours<br className="sm:hidden" /> Booked</span>
                   </div>
-                  <div className="text-2xl font-black text-slate-900 mb-1">
+                  <div className="text-sm sm:text-2xl font-black text-slate-900 mb-1">
                     {bookings.reduce((total, b) => {
                       if (b.status !== 'CONFIRMED' && b.status !== 'COMPLETED') return total;
                       if (!b.start_time || !b.end_time) return total;
                       const [sh, sm] = b.start_time.split(':').map(Number);
                       const [eh, em] = b.end_time.split(':').map(Number);
                       return total + (eh + em / 60) - (sh + sm / 60);
-                    }, 0).toFixed(1)} hrs
+                    }, 0).toFixed(1)}<span className="text-[10px] sm:text-lg">h</span>
                   </div>
-                  <div className="text-[10px] font-bold text-emerald-600">Active studio utilization</div>
+                  <div className="hidden sm:block text-[10px] font-bold text-emerald-600">Active utilization</div>
                 </div>
               </div>
 
               {/* Total Reservations */}
-              <div className="bg-white rounded-2xl p-6 border border-amber-100 shadow-sm shadow-amber-100/50 relative overflow-hidden group hover:shadow-md transition-all">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <Calendar className="w-16 h-16 text-amber-600" />
+              <div className="bg-white rounded-xl sm:rounded-2xl py-5 px-3 sm:p-6 border border-amber-100 shadow-sm shadow-amber-100/50 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Calendar className="w-8 h-8 sm:w-16 sm:h-16 text-amber-600" />
                 </div>
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-bold text-slate-500">Total Reservations</span>
+                <div className="relative z-10 flex flex-col h-full justify-center">
+                  <div className="flex items-center justify-between mb-2 sm:mb-4">
+                    <span className="text-[9px] sm:text-xs font-bold text-slate-500 leading-tight">Total<br className="sm:hidden" /> Booked</span>
                   </div>
-                  <div className="text-2xl font-black text-slate-900 mb-1">{bookings.filter(b => b.status === 'CONFIRMED' || b.status === 'COMPLETED').length}</div>
-                  <div className="text-[10px] font-bold text-amber-600">Confirmed sessions</div>
+                  <div className="text-sm sm:text-2xl font-black text-slate-900 mb-1">{bookings.filter(b => b.status === 'CONFIRMED' || b.status === 'COMPLETED').length}</div>
+                  <div className="hidden sm:block text-[10px] font-bold text-amber-600">Confirmed sessions</div>
                 </div>
               </div>
 
               {/* Active Studios */}
-              <div className="bg-white rounded-2xl p-6 border border-amber-100 shadow-sm shadow-amber-100/50 relative overflow-hidden group hover:shadow-md transition-all">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <Radio className="w-16 h-16 text-amber-600" />
+              <div className="bg-white rounded-xl sm:rounded-2xl py-5 px-3 sm:p-6 border border-amber-100 shadow-sm shadow-amber-100/50 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Radio className="w-8 h-8 sm:w-16 sm:h-16 text-amber-600" />
                 </div>
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-bold text-slate-500">Active Studios</span>
+                <div className="relative z-10 flex flex-col h-full justify-center">
+                  <div className="flex items-center justify-between mb-2 sm:mb-4">
+                    <span className="text-[9px] sm:text-xs font-bold text-slate-500 leading-tight">Active<br className="sm:hidden" /> Studios</span>
                   </div>
-                  <div className="text-2xl font-black text-slate-900 mb-1">{rooms.length} Suites</div>
-                  <div className="text-[10px] font-bold text-amber-600">Total registered in database</div>
+                  <div className="text-sm sm:text-2xl font-black text-slate-900 mb-1">{rooms.length}</div>
+                  <div className="hidden sm:block text-[10px] font-bold text-amber-600">Total in database</div>
                 </div>
               </div>
             </div>
@@ -691,7 +693,7 @@ export default function AdminDashboard({ adminTab, setAdminTab, onOpenBooking })
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+              <table className="w-full text-left border-collapse text-xs whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider bg-slate-50">
                     <th className="py-3 px-4">Ref Code</th>
@@ -1059,7 +1061,7 @@ export default function AdminDashboard({ adminTab, setAdminTab, onOpenBooking })
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
+                <table className="w-full text-left border-collapse text-xs whitespace-nowrap">
                   <thead>
                     <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider bg-slate-50">
                       <th className="py-3 px-4">Name</th>
@@ -1212,7 +1214,7 @@ export default function AdminDashboard({ adminTab, setAdminTab, onOpenBooking })
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
+                  <table className="w-full text-left border-collapse text-xs whitespace-nowrap">
                     <thead>
                       <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider bg-slate-50">
                         <th className="py-3 px-4">Title</th>
