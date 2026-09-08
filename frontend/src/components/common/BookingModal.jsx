@@ -711,8 +711,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                   const isDisabled = isBooked || isPastHour;
 
                   const isStart = selectionStartBlock === hour;
-                  // We do NOT highlight the selectionEndBlock because it is the exclusive boundary (e.g. selecting 4 PM as end time means the booking stops at 4 PM, so the 4 PM block is not part of the session).
-                  const isEnd = false; 
+                  const isEnd = selectionEndBlock === hour;
                   const isInRange = selectionStartBlock !== null && selectionEndBlock !== null && hour > selectionStartBlock && hour < selectionEndBlock;
 
                   return (
