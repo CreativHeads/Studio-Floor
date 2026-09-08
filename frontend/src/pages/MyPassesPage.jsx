@@ -10,6 +10,15 @@ export default function MyPassesPage() {
   const [loading, setLoading] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
 
+  const formatTimeAMPM = (timeStr) => {
+    if (!timeStr) return '';
+    const [h, m] = timeStr.split(':');
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hr12 = hour % 12 || 12;
+    return `${hr12.toString().padStart(2, '0')}:${m} ${ampm}`;
+  };
+
   useEffect(() => {
     if (user) {
       setLoading(true);
@@ -146,13 +155,13 @@ export default function MyPassesPage() {
                     <div className="space-y-1.5">
                       <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Time</p>
                       <p className="text-xs font-bold text-[#111111] flex items-center gap-1.5 bg-white px-3 py-2.5 rounded-lg shadow-sm border border-[#E5E5E7]">
-                        <Clock className="w-3.5 h-3.5 text-amber-500" /> {selectedBooking.start_time} — {selectedBooking.end_time}
+                        <Clock className="w-3.5 h-3.5 text-amber-500" /> {formatTimeAMPM(selectedBooking.start_time)} — {formatTimeAMPM(selectedBooking.end_time)}
                       </p>
                     </div>
                     <div className="space-y-1.5">
                       <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Team Size</p>
                       <p className="text-xs font-bold text-[#111111] bg-white px-3 py-2.5 rounded-lg shadow-sm border border-[#E5E5E7]">
-                        {selectedBooking.guests_count || '1-4'} People
+                        {selectedBooking.studio_details?.max_capacity === 1 ? '1 Person' : `Up to ${selectedBooking.studio_details?.max_capacity || 4} People`}
                       </p>
                     </div>
                     <div className="space-y-1.5">
@@ -222,7 +231,7 @@ export default function MyPassesPage() {
                       </div>
                       <div className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5 bg-[#F3F3F5] px-3 py-2 rounded-lg border border-[#E5E5E7]">
                         <Clock className="w-3.5 h-3.5 text-amber-500" />
-                        {b.start_time} — {b.end_time}
+                        {formatTimeAMPM(b.start_time)} — {formatTimeAMPM(b.end_time)}
                       </div>
                     </div>
                   </div>
