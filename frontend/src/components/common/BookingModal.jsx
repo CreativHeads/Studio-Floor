@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Calendar, Clock, CheckCircle2, ShieldCheck, Sparkles, ChevronRight, ChevronLeft, QrCode, CreditCard, Sun, Sunset, Moon, Loader2, RefreshCw } from 'lucide-react';
 import { MOCK_ROOMS, api, API_BASE } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -8,6 +8,31 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   const { user, isAdmin } = useAuth();
   const [step, setStep] = useState(1);
   const [step1SubStep, setStep1SubStep] = useState('CAPACITY'); // 'CAPACITY' | 'STUDIO'
+  
+  // Drag to scroll logic for date strip
+  const scrollContainerRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragMoved, setDragMoved] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragMoved(false);
+    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+    setScrollLeft(scrollContainerRef.current.scrollLeft);
+  };
+  const handleMouseLeave = () => setIsDragging(false);
+  const handleMouseUp = () => setIsDragging(false);
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    setDragMoved(true);
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    scrollContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
   const [rooms, setRooms] = useState([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
 
@@ -166,6 +191,26 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
     }
   }, [isOpen, initialData, initialStudio]);
 
+  // Center the selected date on mount or when it changes
+  useEffect(() => {
+    if (step === 2 && scrollContainerRef.current && bookingDate) {
+      // Small timeout to ensure DOM is updated after step change
+      setTimeout(() => {
+        if (scrollContainerRef.current) {
+          const selectedBtn = scrollContainerRef.current.querySelector(`[data-date="${bookingDate}"]`);
+          if (selectedBtn) {
+            const container = scrollContainerRef.current;
+            const scrollLeft = selectedBtn.offsetLeft - (container.offsetWidth / 2) + (selectedBtn.offsetWidth / 2);
+            container.scrollTo({
+              left: scrollLeft,
+              behavior: 'smooth'
+            });
+          }
+        }
+      }, 50);
+    }
+  }, [bookingDate, step]);
+
   // Handle URL Redirects from Payment Gateway
   useEffect(() => {
     if (isOpen && initialOrderId && holdId) {
@@ -188,35 +233,44 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
   if (!isOpen) return null;
 
-  // Dynamic 7-Day Date Strip Generator centered around bookingDate
-  const getNext7Days = () => {
+  // Dynamic 30-Day Scrollable Date Strip Generator
+  const getNext30Days = () => {
     const days = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    const [y, m, d] = bookingDate.split('-');
-    const center = new Date(y, m - 1, d);
 
-    for (let i = -3; i <= 3; i++) {
-      const current = new Date(center);
-      current.setDate(center.getDate() + i);
-      
+    const [y, m, d] = bookingDate.split('-');
+    const selected = new Date(y, m - 1, d);
+    selected.setHours(0, 0, 0, 0);
+
+    const diffDays = Math.floor((selected - today) / (1000 * 60 * 60 * 24));
+    
+    let start = new Date(today);
+    if (diffDays < 0 || diffDays >= 30) {
+       start = new Date(selected);
+       start.setDate(start.getDate() - 3); // Show a few days before custom date
+    }
+
+    for (let i = 0; i < 30; i++) {
+      const current = new Date(start);
+      current.setDate(start.getDate() + i);
+
       const year = current.getFullYear();
       const month = String(current.getMonth() + 1).padStart(2, '0');
       const day = String(current.getDate()).padStart(2, '0');
       const iso = `${year}-${month}-${day}`;
-      
+
       const dayName = current.toLocaleDateString('en-US', { weekday: 'short' });
       const dayNum = current.getDate();
       const monthName = current.toLocaleDateString('en-US', { month: 'short' });
       const isPast = current < today;
-      
+
       days.push({ iso, dayName, dayNum, monthName, isPast });
     }
     return days;
   };
 
-  const next7Days = getNext7Days();
+  const nextDays = getNext30Days();
 
 
 
@@ -235,12 +289,11 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   };
 
   let selectedSlot = null;
-  if (selectionStartBlock !== null && selectionEndBlock !== null && selectionEndBlock >= selectionStartBlock) {
+  if (selectionStartBlock !== null && selectionEndBlock !== null && selectionEndBlock > selectionStartBlock) {
     selectedSlot = {
       start: `${selectionStartBlock.toString().padStart(2, '0')}:00`,
-      end: `${(selectionEndBlock + 1).toString().padStart(2, '0')}:00`,
+      end: `${selectionEndBlock.toString().padStart(2, '0')}:00`,
       hours: selectionEndBlock - selectionStartBlock,
-      // Purely cosmetic: use selectionEndBlock to hide the +1 cleaning hour from the UI text
       label: `${formatAMPM(selectionStartBlock)} - ${formatAMPM(selectionEndBlock)}`
     };
   }
@@ -462,10 +515,10 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                 <div className="col-span-full py-12 flex flex-col items-center justify-center bg-[#f4f4f5] border border-[#E5E5E7] rounded-2xl relative overflow-hidden">
                   {/* Animated Searching GIF */}
                   <div className="relative flex items-center justify-center mb-6">
-                    <img 
-                      src="/search.gif" 
-                      alt="Searching..." 
-                      className="w-24 h-24" 
+                    <img
+                      src="/search.gif"
+                      alt="Searching..."
+                      className="w-24 h-24"
                     />
                   </div>
                   <p className="text-sm font-extrabold text-[#111111] mb-1">Loading Studio Spaces...</p>
@@ -475,16 +528,16 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                 <div className="col-span-full py-12 flex flex-col items-center justify-center bg-[#f4f4f5] border border-[#E5E5E7] rounded-2xl relative overflow-hidden">
                   {/* Animated Searching GIF */}
                   <div className="relative flex items-center justify-center mb-6">
-                    <img 
-                      src="/search.gif" 
-                      alt="Searching..." 
-                      className="w-24 h-24" 
+                    <img
+                      src="/search.gif"
+                      alt="Searching..."
+                      className="w-24 h-24"
                     />
                   </div>
-                  
+
                   <p className="text-sm font-extrabold text-[#111111] mb-1">Looking for the perfect space...</p>
                   <p className="text-[11px] text-slate-500 mb-5 text-center px-4">Please wait a few seconds while we check our studio availability.</p>
-                  
+
                   <button onClick={fetchRooms} className="relative z-10 flex items-center gap-1.5 px-5 py-2.5 bg-[#111111] hover:bg-[#222222] rounded-full text-xs font-bold text-white shadow-md transition-all active:scale-95 group">
                     <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" /> Refresh Search
                   </button>
@@ -492,6 +545,16 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
               ) : (
                 filteredRooms.map((room) => {
                   const isSelected = selectedStudio?.id === room.id;
+                  
+                  // Optimize Cloudinary URLs on the fly
+                  const getOptimizedImage = (url) => {
+                    if (!url || typeof url !== 'string') return url;
+                    if (url.includes('res.cloudinary.com') && url.includes('/upload/') && !url.includes('q_auto')) {
+                      return url.replace('/upload/', '/upload/q_auto,f_auto,w_600,c_fill/');
+                    }
+                    return url;
+                  };
+
                   return (
                     <div
                       key={room.id}
@@ -499,19 +562,29 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                       className={`relative aspect-square rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 group border-2 ${isSelected
                         ? 'border-[#111111] shadow-lg scale-[1.02]'
                         : 'border-transparent hover:border-slate-300 opacity-90 hover:opacity-100'
-                        }`}
+                        } bg-slate-200`}
                     >
+                      {/* Loading Skeleton Background */}
+                      <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center">
+                         <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                      </div>
+
                       {/* Studio Image */}
                       <img
-                        src={room.image}
+                        src={getOptimizedImage(room.image)}
                         alt={room.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700 relative z-10 opacity-0"
+                        onLoad={(e) => {
+                          e.target.classList.remove('opacity-0');
+                          e.target.classList.add('opacity-100');
+                        }}
                       />
                       {/* Gradient Overlay */}
-                      <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity ${isSelected ? 'opacity-100' : 'opacity-70 group-hover:opacity-90'}`} />
+                      <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity z-20 ${isSelected ? 'opacity-100' : 'opacity-70 group-hover:opacity-90'}`} />
 
                       {/* Content */}
-                      <div className="absolute inset-x-0 bottom-0 p-4 flex justify-between items-end">
+                      <div className="absolute inset-x-0 bottom-0 p-4 flex justify-between items-end z-20">
                         <div className="flex-1 pr-2">
                           <h4 className="text-white font-extrabold text-sm leading-tight drop-shadow-md">{room.name}</h4>
                         </div>
@@ -574,16 +647,30 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
               </div>
 
               {/* Day Pills Carousel Strip */}
-              <div className="grid grid-cols-7 gap-1 p-1 bg-slate-100 rounded-xl">
-                {next7Days.map((day) => {
+              <div 
+                ref={scrollContainerRef}
+                onMouseDown={handleMouseDown}
+                onMouseLeave={handleMouseLeave}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                className="flex gap-1.5 p-1 bg-slate-100 rounded-xl overflow-x-auto snap-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing"
+              >
+                {nextDays.map((day) => {
                   const isSelected = bookingDate === day.iso;
                   return (
                     <button
                       key={day.iso}
                       type="button"
+                      data-date={day.iso}
                       disabled={day.isPast}
-                      onClick={() => setBookingDate(day.iso)}
-                      className={`py-1.5 px-0.5 rounded-lg text-center transition-all duration-200 flex flex-col items-center justify-center ${day.isPast ? 'opacity-30 cursor-not-allowed bg-transparent' : ''} ${isSelected
+                      onClick={(e) => {
+                        if (dragMoved) {
+                          e.preventDefault();
+                          return;
+                        }
+                        setBookingDate(day.iso);
+                      }}
+                      className={`min-w-[50px] py-1.5 px-0.5 rounded-lg text-center transition-all duration-200 flex flex-col items-center justify-center shrink-0 snap-start ${day.isPast ? 'opacity-30 cursor-not-allowed bg-transparent' : ''} ${isSelected
                         ? 'bg-[#111111] text-white shadow-md scale-105'
                         : (!day.isPast ? 'hover:bg-slate-200/70 text-slate-700' : '')
                         }`}
@@ -620,6 +707,8 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                   const isMyHold = slotInfo?.status === 'MY_HOLD';
                   const isBooked = !!slotInfo && !isMyHold; // Not booked if it's their own hold!
                   const isHold = slotInfo?.status === 'HOLD';
+                  const isPastHour = new Date(`${bookingDate}T${hour.toString().padStart(2, '0')}:00:00`) < new Date();
+                  const isDisabled = isBooked || isPastHour;
 
                   const isStart = selectionStartBlock === hour;
                   const isEnd = selectionEndBlock === hour;
@@ -629,9 +718,9 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                     <button
                       key={hour}
                       type="button"
-                      disabled={isBooked}
+                      disabled={isDisabled}
                       onClick={() => {
-                        if (isBooked) return;
+                        if (isDisabled) return;
 
                         if (selectionStartBlock === null || (selectionStartBlock !== null && selectionEndBlock !== null) || hour < selectionStartBlock) {
                           setSelectionStartBlock(hour);
@@ -639,8 +728,10 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                         } else {
                           // Check if any blocked hour is in between
                           for (let h = selectionStartBlock; h <= hour; h++) {
-                            if (bookedSlots.some(b => b.hour === h && b.status !== 'MY_HOLD')) {
-                              toast.error("Cannot select across a booked time slot.");
+                            const isHBooked = bookedSlots.some(b => b.hour === h && b.status !== 'MY_HOLD');
+                            const isHPast = new Date(`${bookingDate}T${h.toString().padStart(2, '0')}:00:00`) < new Date();
+                            if (isHBooked || isHPast) {
+                              toast.error("Cannot select across a booked or past time slot.");
                               setSelectionStartBlock(hour);
                               setSelectionEndBlock(null);
                               return;
@@ -649,7 +740,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                           setSelectionEndBlock(hour);
                         }
                       }}
-                      className={`py-2 px-1 rounded-xl text-center transition-all flex flex-col items-center justify-center border-2 ${isBooked
+                      className={`py-2 px-1 rounded-xl text-center transition-all flex flex-col items-center justify-center border-2 ${isDisabled
                         ? isHold ? 'bg-amber-50 border-amber-200 opacity-60 cursor-not-allowed' : 'bg-slate-100 border-slate-200 opacity-40 cursor-not-allowed'
                         : (isStart || isEnd)
                           ? 'bg-[#111111] border-[#111111] text-white shadow-md transform scale-105 z-10'
@@ -660,7 +751,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
                               : 'bg-white border-[#E5E5E7] text-slate-700 hover:border-slate-300'
                         }`}
                     >
-                      <span className={`text-[10px] sm:text-xs font-extrabold ${isBooked ? (isHold ? 'text-amber-500' : 'text-slate-400') : (isInRange || isStart || isEnd) ? 'text-white' : (isMyHold ? 'text-emerald-600' : 'text-[#111111]')}`}>
+                      <span className={`text-[10px] sm:text-xs font-extrabold ${isDisabled ? (isHold ? 'text-amber-500' : 'text-slate-400') : (isInRange || isStart || isEnd) ? 'text-white' : (isMyHold ? 'text-emerald-600' : 'text-[#111111]')}`}>
                         {formatAMPM(hour).replace(':00', '')}
                       </span>
                       {isHold && <span className="text-[7px] font-black text-amber-500 uppercase tracking-widest mt-0.5">Held</span>}
