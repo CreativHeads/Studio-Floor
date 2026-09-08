@@ -69,8 +69,8 @@ class BookingViewSet(viewsets.ModelViewSet):
             start_hour = b.start_time.hour
             end_hour = b.end_time.hour
             
-            # No cleaning buffer needed, just block the exact requested hours
-            block_end = end_hour
+            # Apply cleaning buffer consistently for everyone so the next hour is also blocked
+            block_end = end_hour + 1
             
             for h in range(start_hour, block_end):
                 if h <= 23:
@@ -126,9 +126,9 @@ class BookingViewSet(viewsets.ModelViewSet):
         for b in bookings:
             b_start_hour = b.start_time.hour
             b_end_hour = b.end_time.hour
-            # Existing booking occupies from b_start_hour to b_end_hour
-            if req_start_hour < b_end_hour and req_end_hour > b_start_hour:
-                return Response({'error': 'Selected time overlaps with an existing booking.'}, status=status.HTTP_409_CONFLICT)
+            # Existing booking occupies from b_start_hour to (b_end_hour + 1) to account for cleaning buffer
+            if req_start_hour < (b_end_hour + 1) and req_end_hour > b_start_hour:
+                return Response({'error': 'Selected time overlaps with an existing booking or its cleaning buffer.'}, status=status.HTTP_409_CONFLICT)
             
         # Create a HOLD booking
         hold = Booking.objects.create(
