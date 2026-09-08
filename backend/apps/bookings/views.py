@@ -69,23 +69,14 @@ class BookingViewSet(viewsets.ModelViewSet):
             start_hour = b.start_time.hour
             end_hour = b.end_time.hour
             
-            is_my_booking = False
-            if request.user.is_authenticated and b.user == request.user:
-                is_my_booking = True
-            elif current_hold_id and str(b.id) == str(current_hold_id):
-                is_my_booking = True
-
-            # If it's my booking, don't show the cleaning buffer. Otherwise, include it.
-            block_end = end_hour if is_my_booking else end_hour + 1
+            # No cleaning buffer needed, just block the exact requested hours
+            block_end = end_hour
             
             for h in range(start_hour, block_end):
                 if h <= 23:
                     current_status = blocked_hours_dict.get(h)
                     if current_status not in ['CONFIRMED', 'COMPLETED']:
-                        if is_my_booking and b.status == 'HOLD':
-                            blocked_hours_dict[h] = 'MY_HOLD'
-                        else:
-                            blocked_hours_dict[h] = b.status
+                        blocked_hours_dict[h] = b.status
                 
         blocked_list = [{"hour": k, "status": v} for k, v in blocked_hours_dict.items()]
         return Response(blocked_list)
@@ -135,9 +126,9 @@ class BookingViewSet(viewsets.ModelViewSet):
         for b in bookings:
             b_start_hour = b.start_time.hour
             b_end_hour = b.end_time.hour
-            # Existing booking occupies from b_start_hour to (b_end_hour + 1) to account for cleaning buffer
-            if req_start_hour < (b_end_hour + 1) and req_end_hour > b_start_hour:
-                return Response({'error': 'Selected time overlaps with an existing booking or its cleaning buffer.'}, status=status.HTTP_409_CONFLICT)
+            # Existing booking occupies from b_start_hour to b_end_hour
+            if req_start_hour < b_end_hour and req_end_hour > b_start_hour:
+                return Response({'error': 'Selected time overlaps with an existing booking.'}, status=status.HTTP_409_CONFLICT)
             
         # Create a HOLD booking
         hold = Booking.objects.create(
@@ -211,7 +202,11 @@ class BookingViewSet(viewsets.ModelViewSet):
             }
             
             response = requests.post(url, json=payload, headers=headers)
-            data = response.json()
+            
+            try:
+                data = response.json()
+            except ValueError:
+                return Response({'error': f'Cashfree Error (Not JSON): {response.status_code} - {response.text}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
             if response.status_code == 200:
                 booking.cashfree_order_id = data.get('order_id')
