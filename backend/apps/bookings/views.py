@@ -261,11 +261,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                         if p.get('payment_status') == 'SUCCESS':
                             is_successful = True
                             break
-                            
-            # If still not successful but we are in DEBUG (Sandbox), auto-verify to prevent blocks
-            if not is_successful and getattr(settings, 'DEBUG', False):
-                is_successful = True
-            
             if is_successful:
                 booking.status = 'CONFIRMED'
                 booking.reservation_fee_paid = True

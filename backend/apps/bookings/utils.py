@@ -42,21 +42,26 @@ def send_booking_confirmation_email(booking):
     </html>
     """
     
-    try:
-        import re
-        admin_email = settings.DEFAULT_FROM_EMAIL
-        match = re.search(r'<(.+?)>', admin_email)
-        if match:
-            admin_email = match.group(1)
+    import threading
+    
+    def send_email_task():
+        try:
+            import re
+            admin_email = settings.DEFAULT_FROM_EMAIL
+            match = re.search(r'<(.+?)>', admin_email)
+            if match:
+                admin_email = match.group(1)
+                
+            send_mail(
+                subject=admin_subject,
+                message=strip_tags(admin_html),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[admin_email],
+                html_message=admin_html,
+                fail_silently=False,
+            )
+            logger.info(f"Admin alert email sent to {admin_email} for booking {booking.booking_reference}")
+        except Exception as e:
+            logger.error(f"Failed to send admin alert email: {str(e)}")
             
-        send_mail(
-            subject=admin_subject,
-            message=strip_tags(admin_html),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[admin_email],
-            html_message=admin_html,
-            fail_silently=False,
-        )
-        logger.info(f"Admin alert email sent to {admin_email} for booking {booking.booking_reference}")
-    except Exception as e:
-        logger.error(f"Failed to send admin alert email: {str(e)}")
+    threading.Thread(target=send_email_task, daemon=True).start()
