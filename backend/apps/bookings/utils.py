@@ -25,7 +25,6 @@ def send_booking_confirmation_email(booking):
                     <h3 style="margin-top: 0; color: #111; font-size: 15px;">Creator Info</h3>
                     <p style="margin-bottom: 5px;"><strong>Name:</strong> {booking.customer_name}</p>
                     <p style="margin-bottom: 5px;"><strong>Phone:</strong> {booking.customer_phone}</p>
-                    <p style="margin-bottom: 5px;"><strong>Email:</strong> {booking.customer_email}</p>
                     <p style="margin-bottom: 0;"><strong>Notes:</strong> {booking.notes or 'None'}</p>
                 </div>
                 
@@ -37,7 +36,7 @@ def send_booking_confirmation_email(booking):
                     <p style="margin-bottom: 0;"><strong>Studio:</strong> {booking.studio.name if booking.studio else 'Studio Suite'}</p>
                 </div>
                 
-                <p style="margin-top: 20px;"><a href="http://localhost:5173" style="display:inline-block; padding: 10px 20px; background-color: #111; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 12px;">View Admin Dashboard</a></p>
+                <p style="margin-top: 20px;"><a href="https://www.studiofloor.in/" style="display:inline-block; padding: 10px 20px; background-color: #111; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 12px;">View Admin Dashboard</a></p>
             </div>
         </body>
     </html>
