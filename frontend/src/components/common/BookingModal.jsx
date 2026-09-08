@@ -213,23 +213,37 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
   // Handle URL Redirects from Payment Gateway
   useEffect(() => {
-    if (isOpen && initialOrderId && holdId) {
-      setStep(3);
-      setSubmitting(true);
+    if (isOpen && initialOrderId) {
+      // Try to recover holdId and selection from session storage
+      const savedHoldId = sessionStorage.getItem('cashfree_hold_id');
+      const savedStart = sessionStorage.getItem('cashfree_start');
+      const savedEnd = sessionStorage.getItem('cashfree_end');
 
-      api.verifyPayment(holdId, initialOrderId)
-        .then((verifyRes) => {
-          setConfirmedBooking(verifyRes);
-          setStep(4);
-          setSubmitting(false);
-          toast.success("Payment verified successfully!");
-        })
-        .catch(err => {
-          toast.error("Payment failed or was cancelled. Please try again.");
-          setSubmitting(false);
-        });
+      if (savedHoldId) {
+        setHoldId(parseInt(savedHoldId, 10));
+        if (savedStart !== null) setSelectionStartBlock(parseInt(savedStart, 10));
+        if (savedEnd !== null) setSelectionEndBlock(parseInt(savedEnd, 10));
+        
+        setStep(3);
+        setSubmitting(true);
+
+        api.verifyPayment(savedHoldId, initialOrderId)
+          .then((verifyRes) => {
+            setConfirmedBooking(verifyRes);
+            setStep(4);
+            setSubmitting(false);
+            sessionStorage.removeItem('cashfree_hold_id');
+            sessionStorage.removeItem('cashfree_start');
+            sessionStorage.removeItem('cashfree_end');
+            toast.success("Payment verified successfully!");
+          })
+          .catch(err => {
+            toast.error("Payment failed or was cancelled. Please try again.");
+            setSubmitting(false);
+          });
+      }
     }
-  }, [isOpen, initialOrderId, holdId]);
+  }, [isOpen, initialOrderId]);
 
   if (!isOpen) return null;
 
@@ -368,6 +382,16 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
       if (res.payment_session_id) {
         // Initialize Cashfree
+        // Ensure cashfree SDK is initialized
+        if (!window.Cashfree) {
+          throw new Error("Payment system not fully loaded. Please try again.");
+        }
+        
+        // Save state to sessionStorage before redirect
+        sessionStorage.setItem('cashfree_hold_id', holdId.toString());
+        if (selectionStartBlock !== null) sessionStorage.setItem('cashfree_start', selectionStartBlock.toString());
+        if (selectionEndBlock !== null) sessionStorage.setItem('cashfree_end', selectionEndBlock.toString());
+
         const cashfree = window.Cashfree({
           mode: "sandbox" // Change to "production" when live
         });
