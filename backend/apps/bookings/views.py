@@ -8,6 +8,7 @@ from django.conf import settings
 import requests
 from .models import TimeSlot, Booking
 from .serializers import TimeSlotSerializer, BookingSerializer
+from .utils import send_booking_confirmation_email
 
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all().order_by('-created_at')
@@ -35,7 +36,8 @@ class BookingViewSet(viewsets.ModelViewSet):
                 # Update hold with final details
                 serializer = self.get_serializer(hold, data=request.data, partial=True)
                 serializer.is_valid(raise_exception=True)
-                serializer.save(status='CONFIRMED', expires_at=None)
+                instance = serializer.save(status='CONFIRMED', expires_at=None)
+                send_booking_confirmation_email(instance)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             except Booking.DoesNotExist:
                 return Response({'error': 'Hold expired or invalid'}, status=status.HTTP_400_BAD_REQUEST)
@@ -263,6 +265,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                 booking.status = 'CONFIRMED'
                 booking.reservation_fee_paid = True
                 booking.save()
+                send_booking_confirmation_email(booking)
                 return Response(BookingSerializer(booking).data)
             else:
                 return Response({'error': 'Payment not successful yet'}, status=status.HTTP_400_BAD_REQUEST)
