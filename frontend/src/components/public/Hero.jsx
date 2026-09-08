@@ -75,7 +75,7 @@ export default function Hero({ onOpenBooking }) {
           </div>
 
           {/* Hero Left Content Text */}
-          <div className="relative z-10 max-w-xl text-center lg:text-left text-white space-y-5 lg:space-y-6 w-full pt-8 lg:pt-0 mt-4 lg:mt-0">
+          <div className="relative z-10 max-w-xl text-center lg:text-left text-white space-y-5 lg:space-y-6 w-full pt-8 lg:pt-0 mt-4 lg:-mt-16">
 
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#111111]/80 backdrop-blur-md border border-white/10 shadow-lg text-[10px] sm:text-xs font-bold text-white mx-auto lg:mx-0">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
@@ -95,14 +95,11 @@ export default function Hero({ onOpenBooking }) {
           {/* Floating Studio Reservation Card (Matching Reference Image 1) */}
           <div className="relative z-10 w-full max-w-md bg-white rounded-[2rem] p-6 sm:p-8 shadow-2xl border border-[#E5E5E7] text-[#111111]">
 
-            <div className="mb-6">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-3">
+            <div className="mb-5">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
                 <Video className="w-5 h-5 text-[#111111]" />
                 <h3 className="font-extrabold text-base text-[#111111]">Quick Reservation</h3>
               </div>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Tell us how many creators will be in your session, and we'll instantly match you with the perfect studio setup.
-              </p>
             </div>
 
             <form onSubmit={handleHeroSubmit} className="space-y-5">
@@ -174,13 +171,13 @@ export default function Hero({ onOpenBooking }) {
           </div>
 
           {/* Promo Card 2: Explore Together Photo Card */}
-          <div className="md:col-span-5 bg-white rounded-[2.5rem] p-6 border border-[#E5E5E7] shadow-neo-sm flex flex-col sm:flex-row items-center gap-4">
+          <div className="md:col-span-5 bg-white rounded-[2.5rem] p-6 border border-[#E5E5E7] shadow-neo-sm flex flex-col sm:flex-row items-center gap-5 sm:gap-4 text-center sm:text-left">
             <img
               src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80"
               alt="Podcast Lounge"
-              className="w-full sm:w-44 h-44 object-cover rounded-[1.8rem]"
+              className="w-full sm:w-44 h-56 sm:h-44 object-cover rounded-[1.8rem]"
             />
-            <div className="space-y-2">
+            <div className="space-y-2 flex flex-col items-center sm:items-start">
               <h3 className="font-extrabold text-base text-[#111111]">Let's Record Together</h3>
               <p className="text-xs text-[#666666] leading-relaxed">
                 Enjoy sound isolation and crisp multitrack audio output.
