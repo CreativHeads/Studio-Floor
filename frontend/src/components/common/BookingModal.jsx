@@ -289,12 +289,17 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   };
 
   let selectedSlot = null;
-  if (selectionStartBlock !== null && selectionEndBlock !== null && selectionEndBlock > selectionStartBlock) {
+  if (selectionStartBlock !== null) {
+    // If end block is selected, treat it as inclusive. Otherwise, it's a 1-hour slot.
+    const endBlockInclusive = selectionEndBlock !== null && selectionEndBlock >= selectionStartBlock 
+      ? selectionEndBlock + 1 
+      : selectionStartBlock + 1;
+      
     selectedSlot = {
       start: `${selectionStartBlock.toString().padStart(2, '0')}:00`,
-      end: `${selectionEndBlock.toString().padStart(2, '0')}:00`,
-      hours: selectionEndBlock - selectionStartBlock,
-      label: `${formatAMPM(selectionStartBlock)} - ${formatAMPM(selectionEndBlock)}`
+      end: `${endBlockInclusive.toString().padStart(2, '0')}:00`,
+      hours: endBlockInclusive - selectionStartBlock,
+      label: `${formatAMPM(selectionStartBlock)} - ${formatAMPM(endBlockInclusive)}`
     };
   }
 
