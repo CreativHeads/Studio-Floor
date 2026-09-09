@@ -115,10 +115,18 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
 
 
   const fetchRooms = () => {
-    setIsLoadingRooms(true);
+    // Only show the loading overlay if we don't already have rooms loaded
+    if (rooms.length === 0) {
+      setIsLoadingRooms(true);
+      // Immediately set mock rooms for instant visual feedback, 
+      // then silently update with real data from the API
+      setRooms(MOCK_ROOMS);
+      if (!initialStudio && MOCK_ROOMS.length > 0) setSelectedStudio(MOCK_ROOMS[0]);
+    }
+    
     api.getRooms().then(data => {
       setRooms(data);
-      if (!initialStudio && data.length > 0) setSelectedStudio(data[0]);
+      if (!initialStudio && !selectedStudio && data.length > 0) setSelectedStudio(data[0]);
     }).catch(console.error).finally(() => {
       setIsLoadingRooms(false);
     });
