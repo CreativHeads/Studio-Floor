@@ -1,8 +1,10 @@
 import React from 'react';
+import SEO from '../components/common/SEO';
 
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-[#F3F3F5] text-slate-900 pt-32 pb-24 px-4 sm:px-6 lg:px-8">
+      <SEO title="Privacy Policy" description="Privacy policy and data handling practices for Studio Floor." />
       <div className="max-w-4xl mx-auto bg-white rounded-3xl p-8 sm:p-12 shadow-sm border border-slate-200">
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[#111111] mb-6">Privacy Policy</h1>
         <p className="text-slate-500 font-medium mb-12">Last updated: {new Date().toLocaleDateString()}</p>

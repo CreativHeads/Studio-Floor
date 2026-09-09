@@ -6,6 +6,7 @@ import BookingModal from './components/common/BookingModal';
 import MobileBottomBar from './components/common/MobileBottomBar';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
+import { HelmetProvider } from 'react-helmet-async';
 
 const PublicWebsite = lazy(() => import('./pages/PublicWebsite'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -136,8 +137,10 @@ function MainApp() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <MainApp />
-    </AuthProvider>
+    <HelmetProvider>
+      <AuthProvider>
+        <MainApp />
+      </AuthProvider>
+    </HelmetProvider>
   );
 }

@@ -3,6 +3,7 @@ import { Calendar, Clock, AlertCircle, RefreshCw, ChevronLeft, Share2, Download 
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import SEO from '../components/common/SEO';
 
 export default function MyPassesPage() {
   const { user } = useAuth();
@@ -84,6 +85,7 @@ export default function MyPassesPage() {
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 sm:pt-8 sm:pb-16 min-h-screen">
+      <SEO title="My Studio Passes" description="View and manage your upcoming studio sessions and reservations at Studio Floor." />
       <div className="relative bg-white text-[#111111] rounded-[2rem] p-6 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#E5E5E7] mt-4">
 
         {/* Header Section */}

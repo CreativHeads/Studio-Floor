@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { api, MOCK_ROOMS } from '../services/api';
 import FadeIn from '../components/common/FadeIn';
 import Pagination from '../components/common/Pagination';
+import SEO from '../components/common/SEO';
 
 export default function AdminDashboard({ adminTab, setAdminTab, onOpenBooking }) {
   const [analytics, setAnalytics] = useState(null);
@@ -438,6 +439,7 @@ export default function AdminDashboard({ adminTab, setAdminTab, onOpenBooking })
 
   return (
     <div className="min-h-screen bg-[#F3F3F5] text-slate-900 p-4 sm:p-6 lg:p-8 pb-24 sm:pb-28 lg:pb-8">
+      <SEO title="Admin Dashboard" description="Studio Operations Dashboard" />
       <div className="max-w-7xl mx-auto space-y-8">
 
         {/* Admin Top Header */}

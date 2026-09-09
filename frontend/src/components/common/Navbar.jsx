@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import logoBlack from '../../assets/Studiofloor Logo black.png';
 
 export default function Navbar({ onOpenBooking, onOpenAuth, onOpenMyBookings, currentView, setCurrentView, adminTab, setAdminTab }) {
   const { user, logout } = useAuth();
@@ -52,12 +53,7 @@ export default function Navbar({ onOpenBooking, onOpenAuth, onOpenMyBookings, cu
           
           {/* Brand Logo */}
           <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => setCurrentView('public')}>
-            <div className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-full bg-[#111111] text-white flex items-center justify-center font-black text-xs sm:text-sm">
-              <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
-            </div>
-            <span className="font-extrabold text-lg sm:text-xl tracking-tight text-[#111111] whitespace-nowrap">
-              Studio Floor<span className="text-slate-400">.</span>
-            </span>
+            <img src={logoBlack} alt="Studio Floor" className="h-8 sm:h-10 object-contain" />
           </div>
 
           {/* Desktop Nav Links */}

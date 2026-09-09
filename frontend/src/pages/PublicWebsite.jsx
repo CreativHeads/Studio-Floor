@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import Hero from '../components/public/Hero';
 import FadeIn from '../components/common/FadeIn';
+import SEO from '../components/common/SEO';
 
 // Lazy load below-the-fold components
 const FAQ = lazy(() => import('../components/public/FAQ'));
@@ -11,6 +12,7 @@ const Testimonials = lazy(() => import('../components/public/Testimonials'));
 export default function PublicWebsite({ onOpenBooking }) {
   return (
     <main className="relative z-10 pb-16 lg:pb-0">
+      <SEO />
       <Hero onOpenBooking={onOpenBooking} />
       
       <Suspense fallback={null}>

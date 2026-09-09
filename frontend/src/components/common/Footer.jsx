@@ -1,5 +1,7 @@
 import React from 'react';
 import { Radio, ShieldCheck, Mic, MapPin, Mail, Phone } from 'lucide-react';
+import logoWhite from '../../assets/Studiofloor Logo White.png';
+import iconBlack from '../../assets/Studiofloor icon black.png';
 
 export default function Footer({ currentView, setCurrentView }) {
   if (currentView === 'admin') {
@@ -7,7 +9,7 @@ export default function Footer({ currentView, setCurrentView }) {
       <footer className="bg-[#F3F3F5] text-slate-500 py-6 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-slate-400" />
+            <img src={iconBlack} alt="Studio Floor Icon" className="w-4 h-4 object-contain opacity-50" />
             <span className="text-xs font-bold text-slate-600">Studio Floor Admin</span>
           </div>
           <p className="text-[10px] font-medium">© {new Date().getFullYear()} Studio Floor</p>
@@ -23,13 +25,8 @@ export default function Footer({ currentView, setCurrentView }) {
 
           {/* Brand info */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-white text-[#111111] flex items-center justify-center font-black">
-                <Radio className="w-4 h-4 text-[#111111]" />
-              </div>
-              <span className="font-extrabold text-2xl tracking-tight text-white">
-                Studio Floor<span className="text-emerald-500">.</span>
-              </span>
+            <div className="flex items-center mb-6">
+              <img src={logoWhite} alt="Studio Floor" className="h-8 object-contain" />
             </div>
             <p className="text-sm text-slate-400 leading-relaxed max-w-sm font-medium">
               State-of-the-art broadcast presentation suites & sound-isolated podcast rooms. Built for content creators, corporate keynotes, live streams, and voiceover artists.

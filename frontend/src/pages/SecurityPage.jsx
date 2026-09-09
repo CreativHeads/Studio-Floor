@@ -1,9 +1,11 @@
 import React from 'react';
 import { ShieldCheck, Lock, Server, Eye } from 'lucide-react';
+import SEO from '../components/common/SEO';
 
 export default function SecurityPage() {
   return (
     <div className="min-h-screen bg-[#F3F3F5] text-slate-900 pt-32 pb-24 px-4 sm:px-6 lg:px-8">
+      <SEO title="Security Overview" description="Learn about the security measures and protocols at Studio Floor." />
       <div className="max-w-4xl mx-auto bg-white rounded-3xl p-8 sm:p-12 shadow-sm border border-slate-200">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">

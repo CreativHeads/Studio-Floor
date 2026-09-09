@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { ArrowLeft, Calendar, Tag } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import SEO from '../components/common/SEO';
 
 export default function BlogPage() {
   const [blogs, setBlogs] = useState([]);
@@ -32,6 +33,11 @@ export default function BlogPage() {
   if (selectedBlog) {
     return (
       <div className="flex-1 pt-24 pb-32 bg-white">
+        <SEO 
+          title={selectedBlog.title} 
+          description={selectedBlog.content.replace(/<[^>]+>/g, '').substring(0, 150)} 
+          isArticle={true}
+        />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <button 
             onClick={handleBack}
@@ -75,6 +81,7 @@ export default function BlogPage() {
 
   return (
     <div className="flex-1 pt-24 pb-32 bg-[#F3F3F5]">
+      <SEO title="Studio News & Insights" description="Discover the latest production tips, equipment reviews, and studio updates from the creators at Studio Floor." />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="max-w-2xl mb-16">
