@@ -76,7 +76,10 @@ class BookingViewSet(viewsets.ModelViewSet):
                 if h <= 23:
                     current_status = blocked_hours_dict.get(h)
                     if current_status not in ['CONFIRMED', 'COMPLETED']:
-                        blocked_hours_dict[h] = b.status
+                        if current_hold_id and str(b.id) == str(current_hold_id):
+                            blocked_hours_dict[h] = 'MY_HOLD'
+                        else:
+                            blocked_hours_dict[h] = b.status
                 
         blocked_list = [{"hour": k, "status": v} for k, v in blocked_hours_dict.items()]
         return Response(blocked_list)
