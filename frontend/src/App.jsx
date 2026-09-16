@@ -7,6 +7,7 @@ import MobileBottomBar from './components/common/MobileBottomBar';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
+import { api } from './services/api';
 
 const PublicWebsite = lazy(() => import('./pages/PublicWebsite'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -15,6 +16,9 @@ const BlogPage = lazy(() => import('./pages/BlogPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
 const SecurityPage = lazy(() => import('./pages/SecurityPage'));
+const ComingSoonPage = lazy(() => import('./pages/ComingSoonPage'));
+const MaintenancePage = lazy(() => import('./pages/MaintenancePage'));
+
 function MainApp() {
   const { user, isAdmin } = useAuth();
   const [currentView, setCurrentView] = useState('public'); // 'public' | 'admin' | 'blogs'
@@ -24,6 +28,21 @@ function MainApp() {
   const [bookingInitialData, setBookingInitialData] = useState(null);
   const [activeCategory, setActiveCategory] = useState('ALL');
   const [adminTab, setAdminTab] = useState('dashboard');
+  const [siteMode, setSiteMode] = useState('NORMAL');
+  const [isLoadingMode, setIsLoadingMode] = useState(true);
+
+  React.useEffect(() => {
+    api.getSiteSettings()
+      .then(res => {
+        setSiteMode(res?.mode || 'NORMAL');
+      })
+      .catch(err => {
+        console.error("Failed to fetch site settings", err);
+      })
+      .finally(() => {
+        setIsLoadingMode(false);
+      });
+  }, []);
 
   React.useEffect(() => {
     if (user && isAdmin) {
@@ -43,6 +62,14 @@ function MainApp() {
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    
+    // Check for admin login trigger
+    if (params.has('admin') || params.get('admin') === 'true') {
+      setIsAuthOpen(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
     const orderId = params.get('order_id');
     const storedHoldId = localStorage.getItem('studio_hold_id');
 
@@ -54,6 +81,23 @@ function MainApp() {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
+
+  if (isLoadingMode) {
+    return <div className="min-h-screen bg-[#F3F3F5] flex items-center justify-center"></div>;
+  }
+
+  if (siteMode !== 'NORMAL' && !(user && isAdmin)) {
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-[#111111]" />}>
+        {siteMode === 'COMING_SOON' ? (
+          <ComingSoonPage onOpenAuth={() => setIsAuthOpen(true)} />
+        ) : (
+          <MaintenancePage onOpenAuth={() => setIsAuthOpen(true)} />
+        )}
+        <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      </Suspense>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-[#F3F3F5] text-[#111111] flex flex-col justify-between selection:bg-[#111111] selection:text-white">

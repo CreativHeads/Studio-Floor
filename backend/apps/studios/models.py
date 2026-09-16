@@ -50,3 +50,22 @@ class Blog(models.Model):
     def __str__(self):
         return self.title
 
+class SiteSettings(models.Model):
+    class Mode(models.TextChoices):
+        NORMAL = 'NORMAL', 'Normal'
+        COMING_SOON = 'COMING_SOON', 'Coming Soon'
+        MAINTENANCE = 'MAINTENANCE', 'Maintenance'
+
+    mode = models.CharField(max_length=20, choices=Mode.choices, default=Mode.NORMAL)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Site Settings"
+
+    @classmethod
+    def get_settings(cls):
+        obj, created = cls.objects.get_or_create(id=1)
+        return obj
+
+    def __str__(self):
+        return f"Site Mode: {self.get_mode_display()}"

@@ -73,6 +73,9 @@ export default function AdminDashboard({ adminTab, setAdminTab, onOpenBooking })
   const tableItemsPerPage = 10;
   const gridItemsPerPage = 8;
 
+  const [siteMode, setSiteMode] = useState('NORMAL');
+  const [updatingMode, setUpdatingMode] = useState(false);
+
   const loadAdminData = () => {
     setLoading(true);
 
@@ -123,13 +126,31 @@ export default function AdminDashboard({ adminTab, setAdminTab, onOpenBooking })
 
     api.getBlogs()
       .then(res => setBlogs(res.results || res))
-      .catch(() => setBlogs([]))
+      .catch(() => setBlogs([]));
+
+    api.getSiteSettings()
+      .then(res => setSiteMode(res?.mode || 'NORMAL'))
+      .catch(() => setSiteMode('NORMAL'))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
     loadAdminData();
   }, []);
+
+  const handleModeChange = async (e) => {
+    const newMode = e.target.value;
+    setUpdatingMode(true);
+    try {
+      await api.updateSiteSettings(newMode);
+      setSiteMode(newMode);
+      toast.success(`Site mode updated to ${newMode.replace('_', ' ')}`);
+    } catch (err) {
+      toast.error('Failed to update site mode');
+    } finally {
+      setUpdatingMode(false);
+    }
+  };
 
   const handleUpdateStatus = async (id, newStatus) => {
     try {
@@ -449,14 +470,27 @@ export default function AdminDashboard({ adminTab, setAdminTab, onOpenBooking })
             <p className="hidden sm:block text-xs text-slate-500 mt-1 font-medium">Manage studio bookings, pricing tiers, time slots, and security audit trails.</p>
           </div>
 
-          <button
-            onClick={loadAdminData}
-            className="p-2.5 sm:px-4 sm:py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all flex-shrink-0"
-            title="Refresh Feed"
-          >
-            <RefreshCw className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${loading ? 'animate-spin' : ''}`} /> 
-            <span className="hidden sm:inline">Refresh Feed</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={siteMode}
+              onChange={handleModeChange}
+              disabled={updatingMode}
+              className={`px-3 py-2 bg-white border ${siteMode === 'NORMAL' ? 'border-slate-200 text-slate-700' : 'border-amber-500 text-amber-600'} rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer shadow-sm`}
+              title="Site Status"
+            >
+              <option value="NORMAL">Normal Mode</option>
+              <option value="COMING_SOON">Coming Soon</option>
+              <option value="MAINTENANCE">Maintenance</option>
+            </select>
+            <button
+              onClick={loadAdminData}
+              className="p-2.5 sm:px-4 sm:py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all flex-shrink-0"
+              title="Refresh Feed"
+            >
+              <RefreshCw className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${loading ? 'animate-spin' : ''}`} /> 
+              <span className="hidden sm:inline">Refresh Feed</span>
+            </button>
+          </div>
         </div>
 
         {/* TAB 0: Dashboard / Analytics */}

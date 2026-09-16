@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import StudioRoom, Blog
+from .models import StudioRoom, Blog, SiteSettings
 
 class StudioRoomSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,3 +22,8 @@ class BlogSerializer(serializers.ModelSerializer):
         model = Blog
         fields = '__all__'
         read_only_fields = ('slug', 'created_at', 'updated_at')
+
+class SiteSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteSettings
+        fields = ['mode', 'updated_at']

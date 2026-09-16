@@ -1,6 +1,8 @@
 from rest_framework import viewsets, permissions
-from .models import StudioRoom, Blog
-from .serializers import StudioRoomSerializer, BlogSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .models import StudioRoom, Blog, SiteSettings
+from .serializers import StudioRoomSerializer, BlogSerializer, SiteSettingsSerializer
 
 class IsAdminOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -25,3 +27,19 @@ class BlogViewSet(viewsets.ModelViewSet):
         if not (self.request.user and self.request.user.is_authenticated and (self.request.user.role == 'ADMIN' or self.request.user.is_staff)):
             qs = qs.filter(published=True)
         return qs
+
+class SiteSettingsView(APIView):
+    def get(self, request):
+        settings = SiteSettings.get_settings()
+        serializer = SiteSettingsSerializer(settings)
+        return Response(serializer.data)
+
+    def put(self, request):
+        if not (request.user and request.user.is_authenticated and (request.user.role == 'ADMIN' or request.user.is_staff)):
+            return Response({'error': 'Unauthorized'}, status=403)
+        settings = SiteSettings.get_settings()
+        serializer = SiteSettingsSerializer(settings, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)

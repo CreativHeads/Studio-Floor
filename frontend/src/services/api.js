@@ -125,6 +125,10 @@ export const api = {
   // Analytics & Audit
   getAnalytics: () => request('/analytics/summary/'),
   getUsers: () => request('/auth/users/'),
+
+  // Site Settings
+  getSiteSettings: () => request('/studios/settings/'),
+  updateSiteSettings: (mode) => request('/studios/settings/', { method: 'PUT', body: JSON.stringify({ mode }) }),
 };
 
 // Seed Fallback Data for offline / instant load preview
