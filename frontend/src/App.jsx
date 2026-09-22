@@ -83,7 +83,7 @@ function MainApp() {
   }, []);
 
   if (isLoadingMode) {
-    return <div className="min-h-screen bg-[#F3F3F5] flex items-center justify-center"></div>;
+    return <div className="min-h-screen bg-[#111111] flex items-center justify-center"></div>;
   }
 
   if (siteMode !== 'NORMAL' && !(user && isAdmin)) {
