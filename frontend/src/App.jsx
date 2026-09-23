@@ -83,12 +83,19 @@ function MainApp() {
   }, []);
 
   if (isLoadingMode) {
-    return <div className="min-h-screen bg-[#111111] flex items-center justify-center"></div>;
+    return (
+      <div className="min-h-screen bg-[#111111] flex flex-col items-center justify-center px-6 text-center text-white" role="status" aria-live="polite">
+        <div className="mb-6 h-2 w-24 overflow-hidden rounded-full bg-white/10">
+          <div className="h-full w-1/2 animate-pulse rounded-full bg-emerald-400" />
+        </div>
+        <p className="text-sm font-semibold text-white/60">Preparing Studio Floor...</p>
+      </div>
+    );
   }
 
   if (siteMode !== 'NORMAL' && !(user && isAdmin)) {
     return (
-      <Suspense fallback={<div className="min-h-screen bg-[#111111]" />}>
+      <Suspense fallback={<div className="min-h-screen bg-[#111111] flex items-center justify-center text-sm font-semibold text-white/60">Loading Studio Floor...</div>}>
         {siteMode === 'COMING_SOON' ? (
           <ComingSoonPage onOpenAuth={() => setIsAuthOpen(true)} />
         ) : (
@@ -128,7 +135,7 @@ function MainApp() {
       />
 
       {/* Main View Router */}
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="min-h-screen bg-[#F3F3F5] flex items-center justify-center text-sm font-semibold text-black/50">Loading...</div>}>
         {currentView === 'public' ? (
           <PublicWebsite onOpenBooking={handleOpenBooking} />
         ) : currentView === 'admin' ? (

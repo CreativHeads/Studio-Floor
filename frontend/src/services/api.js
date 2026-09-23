@@ -8,19 +8,28 @@ export const getAuthToken = () => localStorage.getItem('studioplus_token');
 async function request(endpoint, options = {}) {
   const token = getAuthToken();
   const isFormData = options.body instanceof FormData;
+  const { timeout, ...fetchOptions } = options;
 
   const headers = {
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    ...options.headers,
+    ...fetchOptions.headers,
   };
 
   if (!isFormData) {
     headers['Content-Type'] = headers['Content-Type'] || 'application/json';
   }
 
+  let timeoutId;
+  let controller;
+  if (timeout && !fetchOptions.signal) {
+    controller = new AbortController();
+    fetchOptions.signal = controller.signal;
+    timeoutId = setTimeout(() => controller.abort(), timeout);
+  }
+
   try {
     const res = await fetch(`${API_BASE}${endpoint}`, {
-      ...options,
+      ...fetchOptions,
       headers,
     });
 
@@ -48,6 +57,8 @@ async function request(endpoint, options = {}) {
   } catch (error) {
     console.warn(`[API Call Fallback] ${endpoint}:`, error.message);
     throw error;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
 }
 
@@ -127,7 +138,7 @@ export const api = {
   getUsers: () => request('/auth/users/'),
 
   // Site Settings
-  getSiteSettings: () => request('/studios/settings/'),
+  getSiteSettings: () => request('/studios/settings/', { timeout: 8000 }),
   updateSiteSettings: (mode) => request('/studios/settings/', { method: 'PUT', body: JSON.stringify({ mode }) }),
 };
 
