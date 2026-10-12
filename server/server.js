@@ -6,7 +6,7 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { sequelize } from './db.js';
+import { sequelize, initDatabase, dbReady } from './db.js';
 import { SiteSettings } from './models/index.js';
 import auth from './routes/auth.js';
 import studios from './routes/studios.js';
@@ -54,7 +54,6 @@ app.use('/api/', rateLimit({
   legacyHeaders: false,
 }));
 
-let dbReady = false;
 app.get('/api/health', (_req, res) => res.json({ ok: true, db: dbReady }));
 app.use('/api/auth', auth);
 app.use('/api/studios', studios);
@@ -88,13 +87,13 @@ app.listen(port, host, () => {
 // No top-level await: Hostinger's lsnode loads this file with require().
 (async () => {
   try {
-    await sequelize.authenticate();
+    const connected = await initDatabase();
+    if (!connected) return;
     await sequelize.sync();
     await SiteSettings.findOrCreate({ where: { id: 1 }, defaults: { mode: 'NORMAL' } });
     if (process.env.AUTO_SEED === 'true' || (process.env.NODE_ENV !== 'production' && process.env.AUTO_SEED !== 'false')) {
       await seedIfEmpty();
     }
-    dbReady = true;
     startHoldCleanup();
     console.log('Database connected');
   } catch (err) {

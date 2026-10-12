@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { dbReady } from '../db.js';
 import { StudioRoom, Blog, SiteSettings } from '../models/index.js';
 import { optional, required, admin, isAdminUser } from '../middleware/auth.js';
 import { upload } from '../middleware/upload.js';
@@ -33,8 +34,14 @@ function roomPayload(body) {
 }
 
 r.get('/rooms', async (_req, res) => {
-  const rooms = await StudioRoom.findAll({ order: [['id', 'ASC']] });
-  res.json(rooms.map(serializeRoom));
+  if (!dbReady) return res.json([]);
+  try {
+    const rooms = await StudioRoom.findAll({ order: [['id', 'ASC']] });
+    res.json(rooms.map(serializeRoom));
+  } catch (err) {
+    console.error('GET /rooms failed:', err.message);
+    res.json([]);
+  }
 });
 
 r.post('/rooms', required, admin, upload.single('image'), async (req, res) => {
@@ -142,7 +149,13 @@ r.delete('/blogs/:id', required, admin, async (req, res) => {
 r.get('/addons', (_req, res) => res.json([]));
 
 r.get('/settings', async (_req, res) => {
-  res.json(serializeSettings(await getSettings()));
+  if (!dbReady) return res.json({ mode: 'NORMAL' });
+  try {
+    res.json(serializeSettings(await getSettings()));
+  } catch (err) {
+    console.error('GET /settings failed:', err.message);
+    res.json({ mode: 'NORMAL' });
+  }
 });
 
 r.put('/settings', required, admin, async (req, res) => {

@@ -5,11 +5,12 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const useMysql = Boolean(process.env.DB_HOST);
-const mysqlHost = process.env.DB_HOST === 'localhost' ? '127.0.0.1' : process.env.DB_HOST;
+
+export let dbReady = false;
 
 export const sequelize = useMysql
   ? new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
-      host: mysqlHost,
+      host: process.env.DB_HOST,
       port: Number(process.env.DB_PORT || 3306),
       dialect: 'mysql',
       logging: false,
@@ -17,7 +18,9 @@ export const sequelize = useMysql
       dialectOptions: {
         dateStrings: true,
         typeCast: true,
+        connectTimeout: 4000,
       },
+      pool: { max: 5, min: 0, acquire: 4000, idle: 10000 },
     })
   : new Sequelize({
       dialect: 'sqlite',
@@ -26,3 +29,15 @@ export const sequelize = useMysql
       retry: { max: 5 },
       pool: { max: 1, idle: 30000 },
     });
+
+export async function initDatabase() {
+  try {
+    await sequelize.authenticate();
+    dbReady = true;
+    return true;
+  } catch (err) {
+    dbReady = false;
+    console.error('Database authenticate failed:', err.message);
+    return false;
+  }
+}

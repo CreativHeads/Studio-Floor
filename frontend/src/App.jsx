@@ -29,7 +29,6 @@ function MainApp() {
   const [activeCategory, setActiveCategory] = useState('ALL');
   const [adminTab, setAdminTab] = useState('dashboard');
   const [siteMode, setSiteMode] = useState('NORMAL');
-  const [isLoadingMode, setIsLoadingMode] = useState(true);
 
   React.useEffect(() => {
     api.getSiteSettings()
@@ -38,9 +37,6 @@ function MainApp() {
       })
       .catch(err => {
         console.error("Failed to fetch site settings", err);
-      })
-      .finally(() => {
-        setIsLoadingMode(false);
       });
   }, []);
 
@@ -81,17 +77,6 @@ function MainApp() {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
-
-  if (isLoadingMode) {
-    return (
-      <div className="min-h-screen bg-[#111111] flex flex-col items-center justify-center px-6 text-center text-white" role="status" aria-live="polite">
-        <div className="mb-6 h-2 w-24 overflow-hidden rounded-full bg-white/10">
-          <div className="h-full w-1/2 animate-pulse rounded-full bg-emerald-400" />
-        </div>
-        <p className="text-sm font-semibold text-white/60">Preparing Studio Floor...</p>
-      </div>
-    );
-  }
 
   if (siteMode !== 'NORMAL' && !(user && isAdmin)) {
     return (

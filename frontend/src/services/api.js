@@ -138,7 +138,7 @@ export const api = {
   getUsers: () => request('/auth/users/'),
 
   // Site Settings
-  getSiteSettings: () => request('/studios/settings/', { timeout: 8000 }),
+  getSiteSettings: () => request('/studios/settings/', { timeout: 4000 }),
   updateSiteSettings: (mode) => request('/studios/settings/', { method: 'PUT', body: JSON.stringify({ mode }) }),
 };
 
