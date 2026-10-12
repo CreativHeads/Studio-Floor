@@ -5,12 +5,16 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const useMysql = Boolean(process.env.DB_HOST);
+// Hostinger MySQL grants localhost, not IPv6 ::1. Node resolves localhost to ::1.
+const mysqlHost = (!process.env.DB_HOST || process.env.DB_HOST === 'localhost' || process.env.DB_HOST === '::1')
+  ? '127.0.0.1'
+  : process.env.DB_HOST;
 
 export let dbReady = false;
 
 export const sequelize = useMysql
   ? new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
-      host: process.env.DB_HOST,
+      host: mysqlHost,
       port: Number(process.env.DB_PORT || 3306),
       dialect: 'mysql',
       logging: false,
