@@ -82,7 +82,10 @@ export async function seedIfEmpty() {
 
 const isDirect = process.argv[1] && /seed\.js$/i.test(process.argv[1]);
 if (isDirect) {
-  await sequelize.sync();
-  await seedIfEmpty();
-  await sequelize.close();
+  // No top-level await: server.js imports this file and Hostinger loads it via require().
+  (async () => {
+    await sequelize.sync();
+    await seedIfEmpty();
+    await sequelize.close();
+  })();
 }

@@ -85,16 +85,19 @@ app.listen(port, host, () => {
   console.log(`StudioPlus Node API running on ${host}:${port}`);
 });
 
-try {
-  await sequelize.authenticate();
-  await sequelize.sync();
-  await SiteSettings.findOrCreate({ where: { id: 1 }, defaults: { mode: 'NORMAL' } });
-  if (process.env.AUTO_SEED === 'true' || (process.env.NODE_ENV !== 'production' && process.env.AUTO_SEED !== 'false')) {
-    await seedIfEmpty();
+// No top-level await: Hostinger's lsnode loads this file with require().
+(async () => {
+  try {
+    await sequelize.authenticate();
+    await sequelize.sync();
+    await SiteSettings.findOrCreate({ where: { id: 1 }, defaults: { mode: 'NORMAL' } });
+    if (process.env.AUTO_SEED === 'true' || (process.env.NODE_ENV !== 'production' && process.env.AUTO_SEED !== 'false')) {
+      await seedIfEmpty();
+    }
+    dbReady = true;
+    startHoldCleanup();
+    console.log('Database connected');
+  } catch (err) {
+    console.error('Database startup failed:', err.message);
   }
-  dbReady = true;
-  startHoldCleanup();
-  console.log('Database connected');
-} catch (err) {
-  console.error('Database startup failed:', err.message);
-}
+})();
