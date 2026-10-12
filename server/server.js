@@ -79,10 +79,16 @@ app.use((err, _req, res, _next) => {
 
 const port = Number(process.env.PORT || 8000);
 
-await sequelize.sync();
-await SiteSettings.findOrCreate({ where: { id: 1 }, defaults: { mode: 'NORMAL' } });
-if (process.env.AUTO_SEED === 'true' || (process.env.NODE_ENV !== 'production' && process.env.AUTO_SEED !== 'false')) {
-  await seedIfEmpty();
+try {
+  await sequelize.authenticate();
+  await sequelize.sync();
+  await SiteSettings.findOrCreate({ where: { id: 1 }, defaults: { mode: 'NORMAL' } });
+  if (process.env.AUTO_SEED === 'true' || (process.env.NODE_ENV !== 'production' && process.env.AUTO_SEED !== 'false')) {
+    await seedIfEmpty();
+  }
+} catch (err) {
+  console.error('Database startup failed:', err.message);
+  throw err;
 }
 
 startHoldCleanup();

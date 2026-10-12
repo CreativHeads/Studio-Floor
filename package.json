@@ -5,12 +5,28 @@
   "main": "server.js",
   "description": "StudioPlus Hostinger Web App entry (use if hPanel root is the repo, not server/)",
   "scripts": {
-    "postinstall": "npm --prefix server install && npm --prefix frontend install --include=dev && npm --prefix frontend run build",
-    "build": "npm --prefix server install && npm --prefix frontend install --include=dev && npm --prefix frontend run build",
+    "postinstall": "npm --prefix frontend install --include=dev && npm --prefix frontend run build",
+    "build": "npm --prefix frontend install --include=dev && npm --prefix frontend run build",
     "start": "node server/server.js",
     "seed": "npm --prefix server run seed"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.1.0",
+    "firebase-admin": "^13.5.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "mysql2": "^3.15.1",
+    "nodemailer": "^7.0.6",
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7"
   }
 }
