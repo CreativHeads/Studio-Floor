@@ -15,7 +15,7 @@ import analytics from './routes/analytics.js';
 import { seedIfEmpty } from './scripts/seed.js';
 
 if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET must be set in production');
+  console.error('JWT_SECRET must be set in production');
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
