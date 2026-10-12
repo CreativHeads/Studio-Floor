@@ -1,0 +1,13 @@
+{
+  "name": "studioplus",
+  "private": true,
+  "description": "StudioPlus Hostinger Web App entry (use if hPanel root is the repo, not server/)",
+  "scripts": {
+    "build": "npm --prefix server install && npm --prefix frontend install && npm --prefix frontend run build",
+    "start": "node server/server.js",
+    "seed": "npm --prefix server run seed"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

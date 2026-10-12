@@ -37,6 +37,9 @@ venv.bak/
 # Database
 db.sqlite3
 db.sqlite3-journal
+server/data.sqlite
+server/data.sqlite-journal
+server/uploads/
 
 # React / Node.js
 node_modules/

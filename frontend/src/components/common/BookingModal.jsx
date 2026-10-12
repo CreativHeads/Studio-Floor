@@ -301,7 +301,7 @@ export default function BookingModal({ isOpen, onClose, selectedStudio: initialS
   if (guestCapacity.includes('3 People')) requiredCapacity = 3;
   if (guestCapacity.includes('4 People')) requiredCapacity = 4;
 
-  const filteredRooms = rooms.filter(room => room.max_capacity === requiredCapacity);
+  const filteredRooms = rooms.filter(room => Number(room.max_capacity) >= requiredCapacity);
   const isSelectedStudioValid = selectedStudio && filteredRooms.some(r => r.id === selectedStudio.id);
 
   const formatAMPM = (h) => {
