@@ -54,7 +54,8 @@ app.use('/api/', rateLimit({
   legacyHeaders: false,
 }));
 
-app.get('/api/health', (_req, res) => res.json({ ok: true }));
+let dbReady = false;
+app.get('/api/health', (_req, res) => res.json({ ok: true, db: dbReady }));
 app.use('/api/auth', auth);
 app.use('/api/studios', studios);
 app.use('/api/bookings', bookings);
@@ -78,6 +79,11 @@ app.use((err, _req, res, _next) => {
 });
 
 const port = Number(process.env.PORT || 8000);
+const host = process.env.HOST || '0.0.0.0';
+
+app.listen(port, host, () => {
+  console.log(`StudioPlus Node API running on ${host}:${port}`);
+});
 
 try {
   await sequelize.authenticate();
@@ -86,13 +92,9 @@ try {
   if (process.env.AUTO_SEED === 'true' || (process.env.NODE_ENV !== 'production' && process.env.AUTO_SEED !== 'false')) {
     await seedIfEmpty();
   }
+  dbReady = true;
+  startHoldCleanup();
+  console.log('Database connected');
 } catch (err) {
   console.error('Database startup failed:', err.message);
-  throw err;
 }
-
-startHoldCleanup();
-
-app.listen(port, () => {
-  console.log(`StudioPlus Node API running on port ${port}`);
-});
