@@ -4,9 +4,8 @@ console.log('StudioPlus boot', {
   port: process.env.PORT || '',
 });
 
-try {
-  await import('./server/server.js');
-} catch (err) {
+// No top-level await: Hostinger's lsnode loads the entry with require().
+import('./server/server.js').catch(async (err) => {
   console.error('StudioPlus failed to start:', err);
   const http = await import('node:http');
   const port = Number(process.env.PORT || 8000);
@@ -17,4 +16,4 @@ try {
   }).listen(port, '0.0.0.0', () => {
     console.error(`Error page listening on 0.0.0.0:${port}`);
   });
-}
+});
