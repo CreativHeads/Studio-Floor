@@ -48,6 +48,23 @@ const DEMO_ROOMS = [
   },
 ];
 
+// Set ADMIN_EMAIL / ADMIN_PASSWORD (env) to create or reset the real admin login.
+// Runs on every start, so the public demo password never has to stay live.
+export async function syncAdminFromEnv() {
+  const password = process.env.ADMIN_PASSWORD;
+  if (!password) return false;
+  const email = (process.env.ADMIN_EMAIL || 'admin@studioplus.com').trim().toLowerCase();
+  const hash = await bcrypt.hash(password, 10);
+  const existing = await User.findOne({ where: { email } });
+  if (existing) {
+    await existing.update({ password: hash, role: 'ADMIN' });
+  } else {
+    await User.create({ email, username: email.split('@')[0], first_name: 'Admin', last_name: '', role: 'ADMIN', password: hash });
+  }
+  console.log(`Admin account synced for ${email}`);
+  return true;
+}
+
 export async function seedIfEmpty() {
   const userCount = await User.count();
   if (userCount > 0) return false;

@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { Booking, StudioRoom, User } from '../models/index.js';
 import { money } from '../lib/serialize.js';
+import { required, admin } from '../middleware/auth.js';
 
 const r = Router();
 
-r.get('/summary', async (_req, res) => {
+r.get('/summary', required, admin, async (_req, res) => {
   const [confirmed, totalBookings, totalUsers, activeStudios, rooms, recent] = await Promise.all([
     Booking.findAll({ where: { status: 'CONFIRMED' }, attributes: ['studio_id', 'total_amount', 'duration_hours'] }),
     Booking.count(),

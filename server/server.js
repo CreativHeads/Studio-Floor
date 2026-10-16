@@ -12,7 +12,7 @@ import auth from './routes/auth.js';
 import studios from './routes/studios.js';
 import bookings, { startHoldCleanup } from './routes/bookings.js';
 import analytics from './routes/analytics.js';
-import { seedIfEmpty } from './scripts/seed.js';
+import { seedIfEmpty, syncAdminFromEnv } from './scripts/seed.js';
 
 if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
   console.error('JWT_SECRET must be set in production');
@@ -94,6 +94,7 @@ app.listen(port, host, () => {
     if (process.env.AUTO_SEED === 'true' || (process.env.NODE_ENV !== 'production' && process.env.AUTO_SEED !== 'false')) {
       await seedIfEmpty();
     }
+    await syncAdminFromEnv();
     startHoldCleanup();
     console.log('Database connected');
   } catch (err) {
