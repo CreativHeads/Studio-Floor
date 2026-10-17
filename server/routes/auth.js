@@ -30,6 +30,17 @@ async function findUserForLogin(email, password) {
   return ok ? user : null;
 }
 
+// ADMIN_PHONES=+917994940202,+91... : numbers verified by Firebase OTP that get the ADMIN role.
+function isAdminPhone(phoneNumber) {
+  const digits = String(phoneNumber || '').replace(/\D/g, '');
+  if (!digits) return false;
+  return (process.env.ADMIN_PHONES || '')
+    .split(',')
+    .map((n) => n.replace(/\D/g, ''))
+    .filter(Boolean)
+    .includes(digits);
+}
+
 async function createPhoneUser(phoneNumber, fullName, fallbackFirst) {
   const nameParts = String(fullName || fallbackFirst).trim().split(/\s+/);
   const first_name = nameParts[0] || fallbackFirst;
@@ -167,6 +178,7 @@ r.post('/firebase-login', authLimit, async (req, res) => {
 
   let user = await User.findOne({ where: { phone_number: phoneNumber } });
   if (!user) user = await createPhoneUser(phoneNumber, full_name, 'Creator');
+  if (isAdminPhone(phoneNumber) && user.role !== 'ADMIN') await user.update({ role: 'ADMIN' });
 
   res.json({ ...tokensFor(user), user: serializeUser(user) });
 });
